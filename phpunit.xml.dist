@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+    bootstrap="vendor/autoload.php"
+    colors="true"
+    cacheDirectory=".phpunit.cache"
+>
+    <testsuites>
+        <testsuite name="Unit">
+            <directory suffix="Test.php">./tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory suffix="Test.php">./tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory suffix=".php">./src</directory>
+        </include>
+    </source>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="CAMINV_ENVIRONMENT" value="sandbox"/>
+        <env name="CAMINV_SANDBOX_URL" value="https://api-sandbox.e-invoice.gov.kh"/>
+        <env name="CAMINV_PRODUCTION_URL" value="https://api.e-invoice.gov.kh"/>
+        <env name="CAMINV_CLIENT_ID" value="test-client-id"/>
+        <env name="CAMINV_CLIENT_SECRET" value="test-client-secret"/>
+    </php>
+</phpunit>

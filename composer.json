@@ -1,0 +1,56 @@
+{
+    "name": "cambodia/e-invoice-sdk",
+    "description": "CamInv (Cambodia E-Invoicing) SDK for Laravel — OAuth, UBL 2.1 XML generation, document submission, webhooks, and member management",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "cambodia",
+        "e-invoice",
+        "caminv",
+        "ubl",
+        "ubl-2.1",
+        "tax",
+        "laravel"
+    ],
+    "authors": [
+        {
+            "name": "FAO Development Team"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "ext-dom": "*",
+        "ext-libxml": "*",
+        "illuminate/http": "^10.0|^11.0",
+        "illuminate/support": "^10.0|^11.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^8.0|^9.0",
+        "phpunit/phpunit": "^10.0|^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "CamInv\\EInvoice\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "CamInv\\EInvoice\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "CamInv\\EInvoice\\CamInvServiceProvider"
+            ],
+            "aliases": {
+                "CamInv": "CamInv\\EInvoice\\Facades\\CamInv"
+            }
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

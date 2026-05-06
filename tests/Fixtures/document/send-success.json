@@ -1,0 +1,8 @@
+{
+    "documents": [
+        {
+            "document_id": "uuid-test-123-abc-def-456789",
+            "status": "SENT"
+        }
+    ]
+}

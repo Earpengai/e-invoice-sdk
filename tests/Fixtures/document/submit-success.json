@@ -1,0 +1,10 @@
+{
+    "documents": [
+        {
+            "index": 1,
+            "document_id": "uuid-test-123-abc-def-456789",
+            "verification_link": "https://verify.e-invoice.gov.kh/uuid-test-123-abc-def-456789"
+        }
+    ],
+    "failed_documents": []
+}

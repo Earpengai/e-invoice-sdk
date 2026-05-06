@@ -1,0 +1,7 @@
+{
+    "document_id": "uuid-test-123-abc-def-456789",
+    "status": "SUBMITTING",
+    "endpoint_id": "KHUID00001234",
+    "document_type": "INVOICE",
+    "customer_endpoint_id": "KHUID00005678"
+}

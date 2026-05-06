@@ -1,0 +1,11 @@
+{
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-access-token",
+    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-refresh-token",
+    "expires_in": 3600,
+    "endpoint_id": "KHUID00001234",
+    "business_info": {
+        "company_name": "Test Supplier Ltd.",
+        "tin": "L001123456789",
+        "moc_id": "MOC-001"
+    }
+}

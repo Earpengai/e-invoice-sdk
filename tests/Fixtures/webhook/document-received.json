@@ -1,0 +1,6 @@
+{
+    "type": "DOCUMENT.RECEIVED",
+    "document_id": "uuid-test-456-def-abc-789012",
+    "endpoint_id": "KHUID00001234",
+    "status": "VALID"
+}
