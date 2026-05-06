@@ -2,10 +2,31 @@
 
 CamInv (Cambodia E-Invoicing) SDK for Laravel — OAuth 2.0 authentication, UBL 2.1 XML generation, document submission, webhook handling, and member management.
 
+## Table of Contents
+
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Environment Variables](#environment-variables)
+- [Quick Start](#quick-start)
+  - [OAuth 2.0 Connection Flow](#oauth-20-connection-flow)
+  - [UBL 2.1 XML Generation](#ubl-21-xml-generation)
+  - [Credit/Debit Notes](#creditdebit-notes)
+  - [Document Submission](#document-submission)
+  - [Webhook Events](#webhook-events)
+  - [Member Management](#member-management)
+- [Implementing TokenStore](#implementing-tokenstore)
+- [Auto Token Refresh](#auto-token-refresh)
+- [Facade API Reference](#facade-api-reference)
+- [Enums](#enums)
+- [Exceptions](#exceptions)
+- [Tax Categories](#tax-categories)
+- [Configuration Reference](#configuration-reference)
+- [License](#license)
+
 ## Requirements
 
 - PHP 8.1+
-- Laravel 10.x or 11.x
+- Laravel 10.x, 11.x, 12.x, or 13.x
 - ext-dom, ext-libxml
 
 ## Installation
@@ -63,6 +84,8 @@ $xml = CamInv::ubl()->invoice()
     ->setDueDate('2026-06-03')
     ->setInvoiceTypeCode('380')
     ->setDocumentCurrencyCode('KHR')
+    ->setBuyerReference('PO-2026-00456')
+    ->setNote('Payment due within 30 days')
     ->setSupplier([
         'endpoint_id' => 'KHUID00001234',
         'party_name' => 'Your Company Ltd.',
@@ -107,6 +130,11 @@ $xml = CamInv::ubl()->invoice()
         'tax_inclusive_amount' => 1100.00,
         'payable_amount' => 1100.00,
     ])
+    ->setPaymentTerms([
+        'note' => 'Payment due within 30 days',
+        'settlement_discount_percent' => 2.0,
+        'amount' => 22.0,
+    ])
     ->addLine([
         'id' => '1',
         'quantity' => 10,
@@ -128,7 +156,15 @@ $xml = CamInv::ubl()->invoice()
     ])
     ->build();
 
-// $xml is a valid UBL 2.1 Invoice XML string
+// Bulk add lines
+$xml = CamInv::ubl()->invoice()
+    ->setId('INV-2026-00123')
+    // ...
+    ->addLines([
+        ['id' => '1', /* ... */],
+        ['id' => '2', /* ... */],
+    ])
+    ->build();
 ```
 
 ### Credit/Debit Notes
@@ -152,7 +188,7 @@ $xml = CamInv::ubl()->debitNote()
 ### Document Submission
 
 ```php
-// Submit invoice
+// Submit invoice (with optional TTL in seconds, default 30 days)
 $result = CamInv::documents()->submit($xml, $accessToken);
 // Returns: { documents: [{ document_id, verification_link, ... }] }
 
@@ -168,6 +204,9 @@ CamInv::documents()->reject($documentId, $accessToken, 'Incorrect pricing');
 // Fetch document XML/PDF from CamInv
 $xml = CamInv::documents()->getXml($documentId, $accessToken);
 $pdf = CamInv::documents()->getPdf($documentId, $accessToken);
+
+// Get document detail/metadata
+$detail = CamInv::documents()->getDetail($documentId, $accessToken);
 ```
 
 ### Webhook Events
@@ -184,10 +223,14 @@ public function receive(Request $request)
         // Create new received document record
     } elseif ($event->isStatusUpdated()) {
         // Update document status
+        $newStatus = $event->status;
     } elseif ($event->isEntityRevoked()) {
         // Mark connection as revoked
     }
 }
+
+// Configure webhook URL for an endpoint (uses Basic Auth)
+CamInv::webhooks()->configure($endpointId, $webhookUrl);
 ```
 
 ### Member Management
@@ -278,6 +321,34 @@ Then bind it in your `AppServiceProvider`:
 $this->app->bind(\CamInv\EInvoice\Contracts\TokenStore::class, \App\Services\EInvoice\EloquentTokenStore::class);
 ```
 
+## Auto Token Refresh
+
+The SDK supports automatic token refresh via the `HasTokenRefresh` trait. All document operations (submit, send, accept, reject, getXml, getPdf, getDetail) automatically refresh expired tokens when a 401 is received.
+
+Additionally, you can manage tokens explicitly:
+
+```php
+// Get a valid access token (auto-refreshes if expired)
+$token = CamInv::token()->getValidAccessToken($merchantId);
+
+// Manually refresh a merchant's access token
+$result = CamInv::token()->refreshAccessToken($merchantId);
+
+// Bulk refresh all tokens nearing expiry (useful for scheduled tasks)
+$refreshed = CamInv::token()->refreshExpiringTokens();
+
+// Check if a token is expired (with configurable buffer)
+$isExpired = CamInv::token()->isTokenExpired($tokenData);
+```
+
+For scheduled token refresh, add to your `app/Console/Kernel.php`:
+
+```php
+$schedule->call(function () {
+    CamInv::token()->refreshExpiringTokens();
+})->everyFiveMinutes();
+```
+
 ## Facade API Reference
 
 ```php
@@ -285,6 +356,8 @@ use CamInv\EInvoice\Facades\CamInv;
 
 // Client — direct HTTP access
 CamInv::client()->withBearerToken($token)->get('/api/v1/...');
+CamInv::client()->withBearerToken($token)->post('/api/v1/...');
+CamInv::client()->withBearerToken($token)->getRaw('/api/v1/...');
 CamInv::client()->withBasicAuth()->post('/api/v1/...');
 
 // OAuth
@@ -309,7 +382,25 @@ CamInv::documents()->getPdf($documentId, $token);
 CamInv::documents()->getDetail($documentId, $token);
 
 // UBL Builder
-CamInv::ubl()->invoice($options)->setId(...)->build();
+CamInv::ubl()->invoice($options)
+    ->setCustomizationId($id)
+    ->setProfileId($id)
+    ->setId(...)
+    ->setIssueDate(...)
+    ->setDueDate(...)
+    ->setNote(...)
+    ->setBuyerReference(...)
+    ->setInvoiceTypeCode(...)
+    ->setDocumentCurrencyCode(...)
+    ->setSupplier(...)
+    ->setCustomer(...)
+    ->setPaymentTerms(...)
+    ->setTaxTotal(...)
+    ->setMonetaryTotal(...)
+    ->addLine(...)
+    ->addLines([...])
+    ->build();
+
 CamInv::ubl()->creditNote($options)->setOriginalInvoiceId(...)->build();
 CamInv::ubl()->debitNote($options)->setOriginalInvoiceId(...)->build();
 
@@ -332,22 +423,106 @@ use CamInv\EInvoice\Enums\WebhookEventType;
 use CamInv\EInvoice\Enums\RegistrationStatus;
 use CamInv\EInvoice\Enums\TaxCategory;
 
-DocumentType::INVOICE->ublCode();       // '380'
-DocumentType::CREDIT_NOTE->ublCode();   // '381'
+// DocumentType
+DocumentType::INVOICE->ublCode();        // '380'
+DocumentType::CREDIT_NOTE->ublCode();    // '381'
+DocumentType::DEBIT_NOTE->ublCode();     // '383'
+
+// DocumentStatus
+DocumentStatus::DRAFT;
+DocumentStatus::SUBMITTING;
+DocumentStatus::VALID;
+DocumentStatus::DELIVERED;
+DocumentStatus::ACKNOWLEDGED;
+DocumentStatus::IN_PROCESS;
+DocumentStatus::UNDER_QUERY;
+DocumentStatus::CONDITIONALLY_ACCEPTED;
+DocumentStatus::ACCEPTED;
+DocumentStatus::REJECTED;
+DocumentStatus::PAID;
 DocumentStatus::ACCEPTED->isTerminal(); // true
+DocumentStatus::REJECTED->isTerminal(); // true
 DocumentStatus::ACCEPTED->color();      // 'green'
+
+// DocumentDirection
+DocumentDirection::SENT;
+DocumentDirection::RECEIVED;
+
+// WebhookEventType
+WebhookEventType::DOCUMENT_DELIVERED;
+WebhookEventType::DOCUMENT_RECEIVED;
+WebhookEventType::DOCUMENT_STATUS_UPDATED;
+WebhookEventType::ENTITY_REVOKED;
+
+// RegistrationStatus
+RegistrationStatus::PENDING;
+RegistrationStatus::CONNECTED;
+RegistrationStatus::REVOKED;
+RegistrationStatus::EXPIRED;
+
+// TaxCategory
 TaxCategory::STANDARD->defaultRate();   // 10.0
+TaxCategory::ZERO_RATED->defaultRate(); // 0.0
+TaxCategory::EXEMPT->defaultRate();     // 0.0
+TaxCategory::STANDARD->id();            // 'S'
+```
+
+## Exceptions
+
+All exceptions extend `CamInv\EInvoice\Exceptions\CamInvException` which provides `getStatusCode()` and `getResponseBody()` methods.
+
+| Exception | Description |
+|---|---|
+| `AuthenticationException` | Invalid credentials, expired/invalid token, CSRF state mismatch |
+| `ConnectionException` | HTTP timeout, network error, SSL error |
+| `TokenExpiredException` | Token expired and cannot be refreshed, no token stored |
+| `ValidationException` | Invalid UBL XML, missing required fields, invalid document status, submission failure |
+
+```php
+try {
+    CamInv::documents()->submit($xml, $token);
+} catch (\CamInv\EInvoice\Exceptions\AuthenticationException $e) {
+    // Handle auth failure (401)
+} catch (\CamInv\EInvoice\Exceptions\ValidationException $e) {
+    // Handle validation error (422)
+} catch (\CamInv\EInvoice\Exceptions\ConnectionException $e) {
+    // Handle network error
+} catch (\CamInv\EInvoice\Exceptions\CamInvException $e) {
+    // Generic fallback
+    $statusCode = $e->getStatusCode();
+    $body = $e->getResponseBody();
+}
 ```
 
 ## Tax Categories
 
 | ID | Label | Default Rate |
-|----|-------|--------------|
+|---|---|---|
 | `S` | Standard Rate (VAT) | 10% |
 | `Z` | Zero Rated | 0% |
 | `E` | Exempt | 0% |
 
 Configurable via `config/e-invoice.php` → `ubl.tax_categories`.
+
+## Configuration Reference
+
+| Config Key | Env Variable | Default | Description |
+|---|---|---|---|
+| `default_environment` | `CAMINV_ENVIRONMENT` | `sandbox` | `sandbox` or `production` |
+| `environments.sandbox.base_url` | `CAMINV_SANDBOX_URL` | `https://api-sandbox.e-invoice.gov.kh` | Sandbox API URL |
+| `environments.production.base_url` | `CAMINV_PRODUCTION_URL` | `https://api.e-invoice.gov.kh` | Production API URL |
+| `client_id` | `CAMINV_CLIENT_ID` | — | OAuth client ID from CamInv |
+| `client_secret` | `CAMINV_CLIENT_SECRET` | — | OAuth client secret from CamInv |
+| `webhook_url` | `CAMINV_WEBHOOK_URL` | `/api/e-invoice/webhook` | Default webhook URL |
+| `token.refresh_buffer_minutes` | — | `5` | Minutes before expiry to proactively refresh |
+| `http.timeout` | — | `30` | HTTP timeout in seconds |
+| `http.retries` | — | `3` | Number of retry attempts |
+| `http.retry_delay` | — | `100` | Delay between retries (ms) |
+| `ubl.namespaces` | — | UBL 2.1 namespaces | XML namespace map |
+| `ubl.customization_id` | — | `urn:cen.eu:en16931:2017` | UBL customization ID |
+| `ubl.profile_id` | — | `urn:fdc:peppol.eu:2017:poacc:billing:01:1.0` | UBL profile ID |
+| `ubl.tax_categories` | — | `S=10%`, `Z=0%`, `E=0%` | Tax category definitions |
+| `ubl.default_currency` | `CAMINV_DEFAULT_CURRENCY` | `KHR` | Default currency code |
 
 ## License
 
