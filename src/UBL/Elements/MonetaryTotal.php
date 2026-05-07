@@ -5,6 +5,9 @@ namespace CamInv\EInvoice\UBL\Elements;
 use DOMDocument;
 use DOMElement;
 
+/**
+ * Builds cac:LegalMonetaryTotal / cac:RequestedMonetaryTotal UBL elements.
+ */
 class MonetaryTotal
 {
     public static function build(DOMDocument $doc, DOMElement $parent, array $data, string $elementName = 'LegalMonetaryTotal'): void

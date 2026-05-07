@@ -5,6 +5,12 @@ namespace CamInv\EInvoice\UBL\Elements;
 use DOMDocument;
 use DOMElement;
 
+/**
+ * Builds cac:InvoiceLine UBL elements for invoice line items.
+ *
+ * Also provides static helpers buildItem() and buildPrice() shared by
+ * CreditNoteLine and DebitNoteLine.
+ */
 class InvoiceLine
 {
     public static function build(DOMDocument $doc, DOMElement $parent, array $data): void

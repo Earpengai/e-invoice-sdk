@@ -5,6 +5,9 @@ namespace CamInv\EInvoice\UBL\Elements;
 use DOMDocument;
 use DOMElement;
 
+/**
+ * Builds cac:AllowanceCharge UBL elements (discounts or surcharges).
+ */
 class AllowanceCharge
 {
     public static function build(DOMDocument $doc, DOMElement $parent, array $items): void

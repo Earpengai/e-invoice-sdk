@@ -4,6 +4,14 @@ namespace CamInv\EInvoice\UBL\Builders;
 
 use DOMDocument;
 
+/**
+ * Abstract base builder for constructing UBL XML documents.
+ *
+ * Provides common fluent setter methods for header fields (ID, dates,
+ * currency), parties (supplier, customer), and document body elements
+ * (lines, taxes, totals). Concrete subclasses define the root element,
+ * namespace, and line element type.
+ */
 abstract class BaseBuilder
 {
     protected DOMDocument $doc;

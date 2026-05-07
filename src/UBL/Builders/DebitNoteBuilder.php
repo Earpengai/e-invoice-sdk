@@ -4,6 +4,11 @@ namespace CamInv\EInvoice\UBL\Builders;
 
 use CamInv\EInvoice\UBL\Elements;
 
+/**
+ * Builds a UBL Debit Note XML document.
+ *
+ * Requires an originalInvoiceId referencing the invoice being debited.
+ */
 class DebitNoteBuilder extends BaseBuilder
 {
     protected ?string $originalInvoiceId = null;

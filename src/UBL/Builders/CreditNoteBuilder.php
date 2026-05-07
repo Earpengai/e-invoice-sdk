@@ -4,6 +4,11 @@ namespace CamInv\EInvoice\UBL\Builders;
 
 use CamInv\EInvoice\UBL\Elements;
 
+/**
+ * Builds a UBL Credit Note XML document.
+ *
+ * Requires an originalInvoiceId referencing the invoice being credited.
+ */
 class CreditNoteBuilder extends BaseBuilder
 {
     protected ?string $originalInvoiceId = null;

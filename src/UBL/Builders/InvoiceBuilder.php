@@ -4,6 +4,9 @@ namespace CamInv\EInvoice\UBL\Builders;
 
 use CamInv\EInvoice\UBL\Elements;
 
+/**
+ * Builds a UBL Invoice XML document.
+ */
 class InvoiceBuilder extends BaseBuilder
 {
     protected function getRootElement(): string

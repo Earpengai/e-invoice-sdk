@@ -5,6 +5,9 @@ namespace CamInv\EInvoice\UBL\Elements;
 use DOMDocument;
 use DOMElement;
 
+/**
+ * Builds cac:Party UBL element with postal address, tax scheme, legal entity, and contact.
+ */
 class Party
 {
     public static function append(

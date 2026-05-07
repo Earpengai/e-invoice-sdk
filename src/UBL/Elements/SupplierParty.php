@@ -5,6 +5,9 @@ namespace CamInv\EInvoice\UBL\Elements;
 use DOMDocument;
 use DOMElement;
 
+/**
+ * Builds cac:AccountingSupplierParty UBL element.
+ */
 class SupplierParty
 {
     public static function build(DOMDocument $doc, DOMElement $parent, array $data): void

@@ -5,6 +5,9 @@ namespace CamInv\EInvoice\UBL\Elements;
 use DOMDocument;
 use DOMElement;
 
+/**
+ * Builds cac:AdditionalDocumentReference UBL elements (attachments, external references).
+ */
 class AdditionalDocumentReference
 {
     public static function build(DOMDocument $doc, DOMElement $parent, array $refs): void

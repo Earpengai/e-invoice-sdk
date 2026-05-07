@@ -5,6 +5,9 @@ namespace CamInv\EInvoice\UBL\Elements;
 use DOMDocument;
 use DOMElement;
 
+/**
+ * Builds cac:CreditNoteLine UBL elements for credit note line items.
+ */
 class CreditNoteLine
 {
     public static function build(DOMDocument $doc, DOMElement $parent, array $data): void

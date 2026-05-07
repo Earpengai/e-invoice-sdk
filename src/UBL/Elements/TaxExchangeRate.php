@@ -5,6 +5,9 @@ namespace CamInv\EInvoice\UBL\Elements;
 use DOMDocument;
 use DOMElement;
 
+/**
+ * Builds cac:TaxExchangeRate UBL element (source/target currency conversion).
+ */
 class TaxExchangeRate
 {
     public static function build(DOMDocument $doc, DOMElement $parent, array $data): void

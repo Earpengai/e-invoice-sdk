@@ -5,6 +5,9 @@ namespace CamInv\EInvoice\UBL\Elements;
 use DOMDocument;
 use DOMElement;
 
+/**
+ * Builds cac:TaxTotal UBL element with tax subtotals and category/scheme classification.
+ */
 class TaxTotal
 {
     public static function build(DOMDocument $doc, DOMElement $parent, array $taxSubtotals): void

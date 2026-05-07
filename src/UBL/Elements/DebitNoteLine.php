@@ -5,6 +5,9 @@ namespace CamInv\EInvoice\UBL\Elements;
 use DOMDocument;
 use DOMElement;
 
+/**
+ * Builds cac:DebitNoteLine UBL elements for debit note line items.
+ */
 class DebitNoteLine
 {
     public static function build(DOMDocument $doc, DOMElement $parent, array $data): void

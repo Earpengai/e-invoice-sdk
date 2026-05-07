@@ -6,6 +6,9 @@ use CamInv\EInvoice\UBL\Builders\CreditNoteBuilder;
 use CamInv\EInvoice\UBL\Builders\DebitNoteBuilder;
 use CamInv\EInvoice\UBL\Builders\InvoiceBuilder;
 
+/**
+ * Entry point for building UBL XML documents (Invoice, Credit Note, Debit Note).
+ */
 class UBLBuilder
 {
     public static function invoice(array $options = []): InvoiceBuilder
