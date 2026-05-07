@@ -1,6 +1,6 @@
 # Cambodia E-Invoice SDK for Laravel
 
-CamInv (Cambodia E-Invoicing) SDK for Laravel — OAuth 2.0 authentication, UBL 2.1 XML generation, document submission, webhook handling, and member management.
+CamInv (Cambodia E-Invoicing) SDK for Laravel — OAuth 2.0 authentication, UBL 2.1 XML generation, document submission, webhook/polling event handling, and member management.
 
 ## Table of Contents
 
@@ -13,7 +13,9 @@ CamInv (Cambodia E-Invoicing) SDK for Laravel — OAuth 2.0 authentication, UBL 
   - [Credit/Debit Notes](#creditdebit-notes)
   - [Document Submission](#document-submission)
   - [Webhook Events](#webhook-events)
+  - [Polling Events](#polling-events)
   - [Member Management](#member-management)
+- [For-Merchant Pattern](#for-merchant-pattern)
 - [Implementing TokenStore](#implementing-tokenstore)
 - [Auto Token Refresh](#auto-token-refresh)
 - [Facade API Reference](#facade-api-reference)
@@ -59,23 +61,36 @@ CAMINV_DEFAULT_CURRENCY=KHR
 
 ```php
 use CamInv\EInvoice\Facades\CamInv;
+use CamInv\EInvoice\Contracts\TokenStore;
 
-// Step 1: Configure redirect URL (service-level, called once)
+// Step 1: Configure redirect URL (service-level, called once — uses Basic Auth)
 CamInv::oauth()->configureRedirectUrl(['https://your-app.com/callback']);
 
 // Step 2: Generate connect URL (with CSRF state parameter)
 $result = CamInv::oauth()->generateConnectUrl('https://your-app.com/callback');
+// Optionally pass your own state: ->generateConnectUrl($redirectUrl, $customState)
 // $result['url']   → redirect user to this URL
 // $result['state'] → store in session for callback validation
 
-// Step 3: Exchange authorization token
-$tokens = CamInv::oauth()->exchangeAuthToken($authToken);
-// Returns: access_token, refresh_token, expires_in, business_info (containing endpoint_id, moc_id,
-//          company_name_en, company_name_kh, tin, city, phone_number, email)
+// In your callback controller:
+public function callback(Request $request)
+{
+    // Validate the CSRF state parameter
+    CamInv::oauth()->validateState($request->input('state'), session('caminv_state'));
 
-// Revoke a connected member
-$result = CamInv::oauth()->revokeConnectedMember($endpointId);
-// Returns: ['message' => 'Access revoked successfully']
+    // Step 3: Exchange authorization token (uses Basic Auth)
+    $tokens = CamInv::oauth()->exchangeAuthToken($request->input('authToken'));
+
+    // Persist tokens using your TokenStore implementation
+    $merchantId = $tokens['business_info']['endpoint_id'];
+    app(TokenStore::class)->put($merchantId, $tokens);
+    // tokens contain: access_token, refresh_token, expires_in, business_info
+    //   business_info includes: endpoint_id, moc_id, company_name_en, company_name_kh,
+    //   tin, city, phone_number, email
+}
+
+// Revoke a connected member (uses Basic Auth)
+CamInv::oauth()->revokeConnectedMember($endpointId);
 ```
 
 ### UBL 2.1 XML Generation
@@ -170,41 +185,75 @@ $xml = CamInv::ubl()->invoice()
         ['id' => '2', /* ... */],
     ])
     ->build();
+
+// Advance Options: Allowances/charges and additional document references
+$xml = CamInv::ubl()->invoice()
+    ->setId('INV-2026-00124')
+    // ...
+    ->setAllowanceCharges([
+        [
+            'charge_indicator' => false,
+            'amount' => 50.00,
+            'allowance_charge_reason' => 'Loyalty discount',
+        ],
+    ])
+    ->setAdditionalDocumentReferences([
+        [
+            'id' => 'ATT-001',
+            'document_type' => 'Contract',
+            'attachment' => [
+                'file_path' => '/path/to/file.pdf',
+                'mime_code' => 'application/pdf',
+                'filename' => 'contract.pdf',
+            ],
+        ],
+    ])
+    ->build();
 ```
 
 ### Credit/Debit Notes
 
 ```php
-// Credit Note
+// Credit Note (requires setOriginalInvoiceId and setNote)
 $xml = CamInv::ubl()->creditNote()
     ->setOriginalInvoiceId('INV-2026-00123')
     ->setId('CN-2026-00045')
+    ->setNote('Refund for overcharge')
     // ... same builder API as invoice
     ->build();
 
-// Debit Note
+// Debit Note (requires setOriginalInvoiceId and setNote)
 $xml = CamInv::ubl()->debitNote()
     ->setOriginalInvoiceId('INV-2026-00123')
     ->setId('DN-2026-00012')
+    ->setNote('Additional charges for extended scope')
     // ... same builder API as invoice
     ->build();
 ```
 
 ### Document Submission
 
+All document operations support automatic token resolution when using `forMerchant()` (see [For-Merchant Pattern](#for-merchant-pattern)) or you can pass an `$accessToken` explicitly.
+
 ```php
-// Submit invoice (with optional TTL in seconds, default 30 days)
-$result = CamInv::documents()->submit($xml, $accessToken);
+use CamInv\EInvoice\Facades\CamInv;
+use CamInv\EInvoice\Enums\DocumentType;
+
+// Submit a document (must specify DocumentType)
+$result = CamInv::documents()->submit(DocumentType::INVOICE, $xml, $accessToken);
 // Returns: { documents: [{ document_id, verification_link, ... }] }
 
-// Send to customer
-$result = CamInv::documents()->send($documentId, $customerEndpointId, $accessToken);
+// Send one or more documents to customer (batch)
+$result = CamInv::documents()->send([$documentId], $accessToken);
 
-// Accept received document
-CamInv::documents()->accept($documentId, $accessToken);
+// Accept one or more received documents (batch)
+CamInv::documents()->accept([$documentId], $accessToken);
 
-// Reject with reason
-CamInv::documents()->reject($documentId, $accessToken, 'Incorrect pricing');
+// Reject one or more documents with optional reason (batch)
+CamInv::documents()->reject([$documentId], $accessToken, 'Incorrect pricing');
+
+// Update document status (batch)
+CamInv::documents()->updateStatus([$documentId], 'PAID', $accessToken);
 
 // Fetch document XML/PDF from CamInv
 $xml = CamInv::documents()->getXml($documentId, $accessToken);
@@ -212,6 +261,10 @@ $pdf = CamInv::documents()->getPdf($documentId, $accessToken);
 
 // Get document detail/metadata
 $detail = CamInv::documents()->getDetail($documentId, $accessToken);
+
+// List your sent or received documents
+$documents = CamInv::documents()->list($accessToken, 'send', 1, 20);
+// $type: 'send' or 'receive', optional $documentType filter
 ```
 
 ### Webhook Events
@@ -236,16 +289,81 @@ public function receive(Request $request)
 
 // Configure webhook URL for an endpoint (uses Basic Auth)
 CamInv::webhooks()->configure($endpointId, $webhookUrl);
+
+// Remove webhook configuration for an endpoint (uses Basic Auth)
+CamInv::webhooks()->unset($endpointId);
+```
+
+### Polling Events
+
+As an alternative to webhooks, you can poll for document events. This is useful when a public webhook URL is not available.
+
+```php
+use CamInv\EInvoice\Facades\CamInv;
+
+// Poll for recent document events since a given timestamp
+$lastSyncedAt = '2026-05-06T12:00:00Z'; // ISO 8601 format, or null for all
+$events = CamInv::polling()->poll($lastSyncedAt, $accessToken);
+
+foreach ($events as $event) {
+    // Each event is a CamInv\EInvoice\Polling\PollEvent value object
+    $event->documentId;    // string
+    $event->updatedAt;     // string (ISO 8601)
+    $event->type;          // "SEND" or "RECEIVE"
+    $event->payload;       // array (full event data)
+
+    if ($event->isSend()) {
+        // Handle sent document event
+    } elseif ($event->isReceive()) {
+        // Handle received document event
+    }
+}
+
+// With automatic token resolution
+$events = CamInv::polling()->forMerchant($merchantId)->poll($lastSyncedAt);
 ```
 
 ### Member Management
 
 ```php
-// List members
-$members = CamInv::members()->list($accessToken);
+use CamInv\EInvoice\Facades\CamInv;
 
-// Validate taxpayer
-$result = CamInv::members()->validateTaxpayer('L001123456789', $accessToken);
+// Search members by company name, TIN, or endpoint ID
+$members = CamInv::members()->list($accessToken, 'CompanyName', 20);
+
+// Get detailed member information by endpoint ID
+$member = CamInv::members()->get('KHUID00001234', $accessToken);
+
+// Validate taxpayer information
+$result = CamInv::members()->validateTaxpayer(
+    tin: 'L001123456789',
+    singleId: 'KHUID00001234',
+    companyNameEn: 'Your Company Ltd.',
+    companyNameKh: 'ក្រុមហ៊ុន',
+    accessToken: $accessToken,
+);
+```
+
+## For-Merchant Pattern
+
+The `DocumentClient`, `MemberClient`, and `PollingClient` support a `forMerchant()` pattern for automatic token resolution. When you set a merchant context, the SDK automatically fetches and manages tokens via your `TokenStore` implementation — no need to pass `$accessToken` manually.
+
+```php
+use CamInv\EInvoice\Facades\CamInv;
+use CamInv\EInvoice\Enums\DocumentType;
+
+// Without forMerchant — pass token explicitly
+CamInv::documents()->submit(DocumentType::INVOICE, $xml, $accessToken);
+
+// With forMerchant — token resolved automatically from your TokenStore
+CamInv::documents()->forMerchant($merchantId)->submit(DocumentType::INVOICE, $xml);
+
+// All methods support this: submit, send, accept, reject, updateStatus,
+// getXml, getPdf, getDetail, list
+
+// Same for MemberClient and PollingClient
+CamInv::members()->forMerchant($merchantId)->list(null, 'CompanyName');
+CamInv::polling()->forMerchant($merchantId)->poll($lastSyncedAt);
 ```
 
 ## Implementing TokenStore
@@ -328,7 +446,7 @@ $this->app->bind(\CamInv\EInvoice\Contracts\TokenStore::class, \App\Services\EIn
 
 ## Auto Token Refresh
 
-The SDK supports automatic token refresh via the `HasTokenRefresh` trait. All document operations (submit, send, accept, reject, getXml, getPdf, getDetail) automatically refresh expired tokens when a 401 is received.
+The SDK supports automatic token refresh via the `HasTokenRefresh` trait. The `DocumentClient`, `MemberClient`, and `PollingClient` automatically refresh expired tokens when a 401 is received if the `forMerchant()` context is set.
 
 Additionally, you can manage tokens explicitly:
 
@@ -358,16 +476,20 @@ $schedule->call(function () {
 
 ```php
 use CamInv\EInvoice\Facades\CamInv;
+use CamInv\EInvoice\Enums\DocumentType;
 
 // Client — direct HTTP access
 CamInv::client()->withBearerToken($token)->get('/api/v1/...');
 CamInv::client()->withBearerToken($token)->post('/api/v1/...');
+CamInv::client()->withBearerToken($token)->put('/api/v1/...');
+CamInv::client()->withBearerToken($token)->patch('/api/v1/...');
+CamInv::client()->withBearerToken($token)->delete('/api/v1/...');
 CamInv::client()->withBearerToken($token)->getRaw('/api/v1/...');
 CamInv::client()->withBasicAuth()->post('/api/v1/...');
 
-// OAuth
+// OAuth (Basic Auth where noted)
 CamInv::oauth()->configureRedirectUrl([$url]);
-CamInv::oauth()->generateConnectUrl($redirectUrl, $state);
+CamInv::oauth()->generateConnectUrl($redirectUrl, $state = null);
 CamInv::oauth()->exchangeAuthToken($authToken);
 CamInv::oauth()->refreshAccessToken($refreshToken);
 CamInv::oauth()->revokeConnectedMember($endpointId);
@@ -377,20 +499,22 @@ CamInv::token()->getValidAccessToken($merchantId);
 CamInv::token()->isTokenExpired($token);
 CamInv::token()->refreshAccessToken($merchantId);
 CamInv::token()->refreshExpiringTokens();
+CamInv::token()->calculateExpiresAt($expiresIn);
 
-// Documents
-CamInv::documents()->submit($xml, $token);
-CamInv::documents()->send($documentId, $endpointId, $token);
-CamInv::documents()->accept($documentId, $token);
-CamInv::documents()->reject($documentId, $token, $reason);
-CamInv::documents()->getXml($documentId, $token);
-CamInv::documents()->getPdf($documentId, $token);
-CamInv::documents()->getDetail($documentId, $token);
+// Documents (all support forMerchant auto-token)
+CamInv::documents()->submit(DocumentType::INVOICE, $xml, $token);
+CamInv::documents()->send([$docId], $token);
+CamInv::documents()->accept([$docId], $token);
+CamInv::documents()->reject([$docId], $token, $reason = null);
+CamInv::documents()->updateStatus([$docId], $status, $token);
+CamInv::documents()->getXml($docId, $token);
+CamInv::documents()->getPdf($docId, $token);
+CamInv::documents()->getDetail($docId, $token);
+CamInv::documents()->list($token, $type = 'send', $page = 1, $size = 20, $documentType = null);
+CamInv::documents()->forMerchant($merchantId)->submit(DocumentType::INVOICE, $xml);
 
 // UBL Builder
 CamInv::ubl()->invoice($options)
-    ->setCustomizationId($id)
-    ->setProfileId($id)
     ->setId(...)
     ->setIssueDate(...)
     ->setDueDate(...)
@@ -401,6 +525,9 @@ CamInv::ubl()->invoice($options)
     ->setSupplier(...)
     ->setCustomer(...)
     ->setPaymentTerms(...)
+    ->setAdditionalDocumentReferences(...)
+    ->setAllowanceCharges(...)
+    ->setTaxExchangeRate(...)
     ->setTaxTotal(...)
     ->setMonetaryTotal(...)
     ->addLine(...)
@@ -412,12 +539,21 @@ CamInv::ubl()->debitNote($options)->setOriginalInvoiceId(...)->build();
 
 // Webhooks
 CamInv::webhooks()->configure($endpointId, $webhookUrl);
+CamInv::webhooks()->unset($endpointId);
 CamInv::parseWebhook($payload);
 
-// Members
-CamInv::members()->list($token);
-CamInv::members()->validateTaxpayer($tin, $token);
+// Members (supports forMerchant auto-token)
+CamInv::members()->list($token, $keyword = '', $limit = 10);
+CamInv::members()->get($endpointId, $token);
+CamInv::members()->validateTaxpayer($tin, $singleId, $companyNameEn, $companyNameKh, $token);
+CamInv::members()->forMerchant($merchantId)->list(null, 'CompanyName');
+
+// Polling (supports forMerchant auto-token)
+CamInv::polling()->poll($lastSyncedAt, $token);
+CamInv::polling()->forMerchant($merchantId)->poll($lastSyncedAt);
 ```
+
+> **Auto token resolution:** When `$token` is `null` and `forMerchant($merchantId)` is set on `DocumentClient`, `MemberClient`, or `PollingClient`, the `TokenManager` automatically resolves a valid access token from your `TokenStore` and refreshes it on 401. You can still pass an explicit `$accessToken` to bypass this behavior.
 
 ## Enums
 
@@ -430,9 +566,13 @@ use CamInv\EInvoice\Enums\RegistrationStatus;
 use CamInv\EInvoice\Enums\TaxCategory;
 
 // DocumentType
-DocumentType::INVOICE->ublCode();        // '380'
-DocumentType::CREDIT_NOTE->ublCode();    // '381'
-DocumentType::DEBIT_NOTE->ublCode();     // '383'
+DocumentType::INVOICE;             // 'INVOICE'
+DocumentType::CREDIT_NOTE;         // 'CREDIT_NOTE'
+DocumentType::DEBIT_NOTE;          // 'DEBIT_NOTE'
+DocumentType::INVOICE->ublCode();  // '380'
+DocumentType::CREDIT_NOTE->ublCode(); // '381'
+DocumentType::DEBIT_NOTE->ublCode();  // '383'
+DocumentType::INVOICE->xmlns();    // 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'
 
 // DocumentStatus
 DocumentStatus::DRAFT;
@@ -448,6 +588,7 @@ DocumentStatus::REJECTED;
 DocumentStatus::PAID;
 DocumentStatus::ACCEPTED->isTerminal(); // true
 DocumentStatus::REJECTED->isTerminal(); // true
+DocumentStatus::PAID->isTerminal();     // true
 DocumentStatus::ACCEPTED->color();      // 'green'
 
 // DocumentDirection
@@ -455,22 +596,24 @@ DocumentDirection::SENT;
 DocumentDirection::RECEIVED;
 
 // WebhookEventType
-WebhookEventType::DOCUMENT_DELIVERED;
-WebhookEventType::DOCUMENT_RECEIVED;
-WebhookEventType::DOCUMENT_STATUS_UPDATED;
-WebhookEventType::ENTITY_REVOKED;
+WebhookEventType::DOCUMENT_DELIVERED;       // 'DOCUMENT.DELIVERED'
+WebhookEventType::DOCUMENT_RECEIVED;        // 'DOCUMENT.RECEIVED'
+WebhookEventType::DOCUMENT_STATUS_UPDATED;  // 'DOCUMENT.STATUS_UPDATED'
+WebhookEventType::ENTITY_REVOKED;           // 'ENTITY.REVOKED'
 
 // RegistrationStatus
-RegistrationStatus::PENDING;
-RegistrationStatus::CONNECTED;
-RegistrationStatus::REVOKED;
-RegistrationStatus::EXPIRED;
+RegistrationStatus::PENDING;     // 'pending'
+RegistrationStatus::CONNECTED;   // 'connected'
+RegistrationStatus::REVOKED;     // 'revoked'
+RegistrationStatus::EXPIRED;     // 'expired'
 
 // TaxCategory
-TaxCategory::STANDARD->defaultRate();   // 10.0
-TaxCategory::ZERO_RATED->defaultRate(); // 0.0
-TaxCategory::EXEMPT->defaultRate();     // 0.0
-TaxCategory::STANDARD->id();            // 'S'
+TaxCategory::VAT;                     // 'VAT'
+TaxCategory::SPECIFIC_TAX;            // 'SP'
+TaxCategory::PUBLIC_LIGHTING_TAX;     // 'PLT'
+TaxCategory::ACCOMMODATION_TAX;       // 'AT'
+TaxCategory::VAT->defaultRate();      // 10.0
+TaxCategory::SPECIFIC_TAX->defaultRate(); // 0.0
 ```
 
 ## Exceptions
@@ -479,14 +622,14 @@ All exceptions extend `CamInv\EInvoice\Exceptions\CamInvException` which provide
 
 | Exception | Description |
 |---|---|
-| `AuthenticationException` | Invalid credentials, expired/invalid token, CSRF state mismatch |
+| `AuthenticationException` | Invalid credentials, expired/invalid token, CSRF state mismatch, invalid auth token, revoke failure |
 | `ConnectionException` | HTTP timeout, network error, SSL error |
 | `TokenExpiredException` | Token expired and cannot be refreshed, no token stored |
 | `ValidationException` | Invalid UBL XML, missing required fields, invalid document status, submission failure |
 
 ```php
 try {
-    CamInv::documents()->submit($xml, $token);
+    CamInv::documents()->submit(DocumentType::INVOICE, $xml, $token);
 } catch (\CamInv\EInvoice\Exceptions\AuthenticationException $e) {
     // Handle auth failure (401)
 } catch (\CamInv\EInvoice\Exceptions\ValidationException $e) {
@@ -502,13 +645,21 @@ try {
 
 ## Tax Categories
 
-| ID | Label | Default Rate |
-|---|---|---|
-| `S` | Standard Rate (VAT) | 10% |
-| `Z` | Zero Rated | 0% |
-| `E` | Exempt | 0% |
-
 Configurable via `config/e-invoice.php` → `ubl.tax_categories`.
+
+| Constant | Enum Value | Label | Default Rate |
+|---|---|---|---|
+| `TaxCategory::VAT` | `VAT` | Value Added Tax | 10% |
+| `TaxCategory::SPECIFIC_TAX` | `SP` | Specific Tax | 0% |
+| `TaxCategory::PUBLIC_LIGHTING_TAX` | `PLT` | Public Lighting Tax | 0% |
+| `TaxCategory::ACCOMMODATION_TAX` | `AT` | Accommodation Tax | 0% |
+
+Tax schemes are configured separately at `ubl.tax_schemes`:
+
+| ID | Name |
+|---|---|
+| `S` | Standard |
+| `Z` | Zero |
 
 ## Configuration Reference
 
@@ -524,10 +675,8 @@ Configurable via `config/e-invoice.php` → `ubl.tax_categories`.
 | `http.timeout` | — | `30` | HTTP timeout in seconds |
 | `http.retries` | — | `3` | Number of retry attempts |
 | `http.retry_delay` | — | `100` | Delay between retries (ms) |
-| `ubl.namespaces` | — | UBL 2.1 namespaces | XML namespace map |
-| `ubl.customization_id` | — | `urn:cen.eu:en16931:2017` | UBL customization ID |
-| `ubl.profile_id` | — | `urn:fdc:peppol.eu:2017:poacc:billing:01:1.0` | UBL profile ID |
-| `ubl.tax_categories` | — | `S=10%`, `Z=0%`, `E=0%` | Tax category definitions |
+| `ubl.tax_categories` | — | `VAT`, `SP`, `PLT`, `AT` | Tax category definitions |
+| `ubl.tax_schemes` | — | `S` (Standard), `Z` (Zero) | Tax scheme definitions |
 | `ubl.default_currency` | `CAMINV_DEFAULT_CURRENCY` | `KHR` | Default currency code |
 
 ## License
