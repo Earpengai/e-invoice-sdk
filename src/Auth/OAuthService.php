@@ -65,7 +65,7 @@ class OAuthService
     public function refreshAccessToken(string $refreshToken): array
     {
         try {
-            $response = $this->client->post('/api/v1/auth/token', [
+            $response = $this->client->withBasicAuth()->post('/api/v1/auth/token', [
                 'refresh_token' => $refreshToken,
             ]);
         } catch (\CamInv\EInvoice\Exceptions\CamInvException $e) {
