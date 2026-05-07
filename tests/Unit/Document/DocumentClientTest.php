@@ -3,10 +3,14 @@
 namespace CamInv\EInvoice\Tests\Unit\Document;
 
 use CamInv\EInvoice\Client\CamInvClient;
+use CamInv\EInvoice\Contracts\TokenStore;
 use CamInv\EInvoice\Document\DocumentClient;
 use CamInv\EInvoice\Enums\DocumentType;
+use CamInv\EInvoice\Support\Config;
+use CamInv\EInvoice\Token\TokenManager;
 use CamInv\EInvoice\Tests\TestCase;
 use Illuminate\Support\Facades\Http;
+use Mockery;
 
 class DocumentClientTest extends TestCase
 {
@@ -16,9 +20,20 @@ class DocumentClientTest extends TestCase
     {
         parent::setUp();
 
+        $store = Mockery::mock(TokenStore::class);
+        $config = $this->app->make(Config::class);
+        $tokenManager = new TokenManager($store, Mockery::mock(\CamInv\EInvoice\Auth\OAuthService::class), $config);
+
         $this->client = new DocumentClient(
-            new CamInvClient('https://api-sandbox.e-invoice.gov.kh')
+            new CamInvClient('https://api-sandbox.e-invoice.gov.kh'),
+            $tokenManager,
         );
+    }
+
+    protected function tearDown(): void
+    {
+        Mockery::close();
+        parent::tearDown();
     }
 
     public function test_submit(): void

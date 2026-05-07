@@ -67,7 +67,11 @@ class TokenManagerTest extends TestCase
 
         $this->store->shouldReceive('get')->with('merchant-1')->twice()->andReturn($expiredToken);
         $this->authService->shouldReceive('refreshAccessToken')->with('refresh-token')->once()->andReturn($newToken);
-        $this->store->shouldReceive('put')->with('merchant-1', $newToken)->once();
+        $this->store->shouldReceive('put')->with('merchant-1', Mockery::on(function (array $data) {
+            return $data['access_token'] === 'new-valid-token'
+                && $data['refresh_token'] === 'new-refresh-token'
+                && isset($data['expires_at']);
+        }))->once();
 
         $result = $this->manager->getValidAccessToken('merchant-1');
 
@@ -122,11 +126,16 @@ class TokenManagerTest extends TestCase
 
         $this->store->shouldReceive('get')->with('merchant-1')->once()->andReturn($storedToken);
         $this->authService->shouldReceive('refreshAccessToken')->with('old-refresh')->once()->andReturn($newToken);
-        $this->store->shouldReceive('put')->with('merchant-1', $newToken)->once();
+        $this->store->shouldReceive('put')->with('merchant-1', Mockery::on(function (array $data) {
+            return $data['access_token'] === 'new-token'
+                && $data['refresh_token'] === 'new-refresh'
+                && isset($data['expires_at']);
+        }))->once();
 
         $result = $this->manager->refreshAccessToken('merchant-1');
 
-        $this->assertSame($newToken, $result);
+        $this->assertSame('new-token', $result['access_token']);
+        $this->assertArrayHasKey('expires_at', $result);
     }
 
     public function test_refresh_access_token_fails_when_no_stored_token(): void
@@ -150,11 +159,19 @@ class TokenManagerTest extends TestCase
 
         $this->store->shouldReceive('get')->with('merchant-1')->once()->andReturn($expiring[0]);
         $this->authService->shouldReceive('refreshAccessToken')->with('r1')->once()->andReturn(['access_token' => 'new1']);
-        $this->store->shouldReceive('put')->with('merchant-1', ['access_token' => 'new1', 'refresh_token' => 'r1'])->once();
+        $this->store->shouldReceive('put')->with('merchant-1', Mockery::on(function (array $data) {
+            return $data['access_token'] === 'new1'
+                && $data['refresh_token'] === 'r1'
+                && isset($data['expires_at']);
+        }))->once();
 
         $this->store->shouldReceive('get')->with('merchant-2')->once()->andReturn($expiring[1]);
         $this->authService->shouldReceive('refreshAccessToken')->with('r2')->once()->andReturn(['access_token' => 'new2']);
-        $this->store->shouldReceive('put')->with('merchant-2', ['access_token' => 'new2', 'refresh_token' => 'r2'])->once();
+        $this->store->shouldReceive('put')->with('merchant-2', Mockery::on(function (array $data) {
+            return $data['access_token'] === 'new2'
+                && $data['refresh_token'] === 'r2'
+                && isset($data['expires_at']);
+        }))->once();
 
         $results = $this->manager->refreshExpiringTokens();
 

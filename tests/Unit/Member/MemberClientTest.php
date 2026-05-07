@@ -3,9 +3,13 @@
 namespace CamInv\EInvoice\Tests\Unit\Member;
 
 use CamInv\EInvoice\Client\CamInvClient;
+use CamInv\EInvoice\Contracts\TokenStore;
 use CamInv\EInvoice\Member\MemberClient;
+use CamInv\EInvoice\Support\Config;
+use CamInv\EInvoice\Token\TokenManager;
 use CamInv\EInvoice\Tests\TestCase;
 use Illuminate\Support\Facades\Http;
+use Mockery;
 
 class MemberClientTest extends TestCase
 {
@@ -15,9 +19,20 @@ class MemberClientTest extends TestCase
     {
         parent::setUp();
 
+        $store = Mockery::mock(TokenStore::class);
+        $config = $this->app->make(Config::class);
+        $tokenManager = new TokenManager($store, Mockery::mock(\CamInv\EInvoice\Auth\OAuthService::class), $config);
+
         $this->client = new MemberClient(
-            new CamInvClient('https://api-sandbox.e-invoice.gov.kh')
+            new CamInvClient('https://api-sandbox.e-invoice.gov.kh'),
+            $tokenManager,
         );
+    }
+
+    protected function tearDown(): void
+    {
+        Mockery::close();
+        parent::tearDown();
     }
 
     public function test_list_members(): void
@@ -73,7 +88,7 @@ class MemberClientTest extends TestCase
             ], 200),
         ]);
 
-        $result = $this->client->get('token-123', 'KHUID5010019082');
+        $result = $this->client->get('KHUID5010019082', 'token-123');
 
         $this->assertSame('KHUID5010019082', $result['endpoint_id']);
         $this->assertSame('E006-2400000017', $result['tin']);
@@ -95,10 +110,10 @@ class MemberClientTest extends TestCase
 
         $result = $this->client->validateTaxpayer(
             'E006-2400000017',
-            'token-123',
             '5010019082',
             'SMALL ENTERPRISE 004',
-            'សហគ្រាសធុតតូច០០៤'
+            'សហគ្រាសធុតតូច០០៤',
+            'token-123'
         );
 
         $this->assertTrue($result['valid']);

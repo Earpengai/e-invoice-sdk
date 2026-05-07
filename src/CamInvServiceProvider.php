@@ -62,7 +62,10 @@ class CamInvServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(DocumentClient::class, function ($app) {
-            return new DocumentClient($app->make(CamInvClient::class));
+            return new DocumentClient(
+                $app->make(CamInvClient::class),
+                $app->make(TokenManager::class),
+            );
         });
 
         $this->app->singleton(WebhookClient::class, function ($app) {
@@ -70,11 +73,17 @@ class CamInvServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(MemberClient::class, function ($app) {
-            return new MemberClient($app->make(CamInvClient::class));
+            return new MemberClient(
+                $app->make(CamInvClient::class),
+                $app->make(TokenManager::class),
+            );
         });
 
         $this->app->singleton(PollingClient::class, function ($app) {
-            return new PollingClient($app->make(CamInvClient::class));
+            return new PollingClient(
+                $app->make(CamInvClient::class),
+                $app->make(TokenManager::class),
+            );
         });
 
         $this->app->singleton('caminv', function ($app) {

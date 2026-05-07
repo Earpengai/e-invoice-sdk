@@ -3,12 +3,34 @@
 namespace CamInv\EInvoice\Tests\Unit\Polling;
 
 use CamInv\EInvoice\Client\CamInvClient;
+use CamInv\EInvoice\Contracts\TokenStore;
 use CamInv\EInvoice\Polling\PollingClient;
+use CamInv\EInvoice\Support\Config;
+use CamInv\EInvoice\Token\TokenManager;
 use CamInv\EInvoice\Tests\TestCase;
 use Illuminate\Support\Facades\Http;
+use Mockery;
 
 class PollingClientTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        Mockery::close();
+        parent::tearDown();
+    }
+
+    protected function createClient(): PollingClient
+    {
+        $store = Mockery::mock(TokenStore::class);
+        $config = $this->app->make(Config::class);
+        $tokenManager = new TokenManager($store, Mockery::mock(\CamInv\EInvoice\Auth\OAuthService::class), $config);
+
+        return new PollingClient(
+            new CamInvClient('https://api-sandbox.e-invoice.gov.kh'),
+            $tokenManager,
+        );
+    }
+
     public function test_poll_with_last_synced_at(): void
     {
         Http::fake([
@@ -26,7 +48,7 @@ class PollingClientTest extends TestCase
             ], 200),
         ]);
 
-        $client = new PollingClient(new CamInvClient('https://api-sandbox.e-invoice.gov.kh'));
+        $client = $this->createClient();
         $results = $client->poll('2024-06-01T01:00:00', 'test-access-token');
 
         $this->assertCount(2, $results);
@@ -59,7 +81,7 @@ class PollingClientTest extends TestCase
             ], 200),
         ]);
 
-        $client = new PollingClient(new CamInvClient('https://api-sandbox.e-invoice.gov.kh'));
+        $client = $this->createClient();
         $results = $client->poll(null, 'test-access-token');
 
         $this->assertCount(1, $results);
@@ -77,7 +99,7 @@ class PollingClientTest extends TestCase
             'api-sandbox.e-invoice.gov.kh/api/v1/document/poll*' => Http::response([], 200),
         ]);
 
-        $client = new PollingClient(new CamInvClient('https://api-sandbox.e-invoice.gov.kh'));
+        $client = $this->createClient();
         $results = $client->poll('2024-06-01T01:00:00', 'test-access-token');
 
         $this->assertSame([], $results);

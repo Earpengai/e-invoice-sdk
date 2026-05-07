@@ -20,5 +20,7 @@ abstract class TestCase extends Orchestra
         $app['config']->set('e-invoice.client_secret', 'test-client-secret');
         $app['config']->set('e-invoice.default_environment', 'sandbox');
         $app['config']->set('e-invoice.environments.sandbox.base_url', 'https://api-sandbox.e-invoice.gov.kh');
+
+        $app->instance(\CamInv\EInvoice\Contracts\TokenStore::class, \Mockery::mock(\CamInv\EInvoice\Contracts\TokenStore::class));
     }
 }
