@@ -27,4 +27,23 @@ class WebhookClientTest extends TestCase
                 && $request->data()['webhook_url'] === 'https://example.com/webhook';
         });
     }
+
+    public function test_unset(): void
+    {
+        Http::fake([
+            'api-sandbox.e-invoice.gov.kh/api/v1/configure/configure-webhook/*' => Http::response([
+                'status' => 'removed',
+            ], 200),
+        ]);
+
+        $client = new WebhookClient(new CamInvClient('https://api-sandbox.e-invoice.gov.kh'));
+        $result = $client->unset('KHUID00001234');
+
+        $this->assertSame('removed', $result['status']);
+
+        Http::assertSent(function ($request) {
+            return $request->method() === 'DELETE'
+                && $request->url() === 'https://api-sandbox.e-invoice.gov.kh/api/v1/configure/configure-webhook/KHUID00001234';
+        });
+    }
 }

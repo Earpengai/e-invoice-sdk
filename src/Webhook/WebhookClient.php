@@ -17,4 +17,9 @@ class WebhookClient
             'webhook_url' => $webhookUrl,
         ]);
     }
+
+    public function unset(string $endpointId): array
+    {
+        return $this->client->withBasicAuth()->delete("/api/v1/configure/configure-webhook/{$endpointId}");
+    }
 }
