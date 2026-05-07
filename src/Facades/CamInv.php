@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \CamInv\EInvoice\UBL\UBLBuilder ubl()
  * @method static \CamInv\EInvoice\Webhook\WebhookClient webhooks()
  * @method static \CamInv\EInvoice\Member\MemberClient members()
+ * @method static \CamInv\EInvoice\Polling\PollingClient polling()
  * @method static \CamInv\EInvoice\Webhook\WebhookEvent parseWebhook(array $payload)
  *
  * @see \CamInv\EInvoice\CamInvManager

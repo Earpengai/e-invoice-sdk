@@ -7,6 +7,7 @@ use CamInv\EInvoice\Client\CamInvClient;
 use CamInv\EInvoice\Contracts\TokenStore;
 use CamInv\EInvoice\Document\DocumentClient;
 use CamInv\EInvoice\Member\MemberClient;
+use CamInv\EInvoice\Polling\PollingClient;
 use CamInv\EInvoice\Support\Config;
 use CamInv\EInvoice\Token\TokenManager;
 use CamInv\EInvoice\Webhook\WebhookClient;
@@ -55,6 +56,10 @@ class CamInvServiceProvider extends ServiceProvider
             return new MemberClient($app->make(CamInvClient::class));
         });
 
+        $this->app->singleton(PollingClient::class, function ($app) {
+            return new PollingClient($app->make(CamInvClient::class));
+        });
+
         $this->app->singleton('caminv', function ($app) {
             return new CamInvManager(
                 $app->make(CamInvClient::class),
@@ -63,6 +68,7 @@ class CamInvServiceProvider extends ServiceProvider
                 $app->make(DocumentClient::class),
                 $app->make(WebhookClient::class),
                 $app->make(MemberClient::class),
+                $app->make(PollingClient::class),
             );
         });
     }

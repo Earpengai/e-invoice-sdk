@@ -6,6 +6,7 @@ use CamInv\EInvoice\Auth\OAuthService;
 use CamInv\EInvoice\Client\CamInvClient;
 use CamInv\EInvoice\Document\DocumentClient;
 use CamInv\EInvoice\Member\MemberClient;
+use CamInv\EInvoice\Polling\PollingClient;
 use CamInv\EInvoice\Token\TokenManager;
 use CamInv\EInvoice\UBL\UBLBuilder;
 use CamInv\EInvoice\Webhook\WebhookClient;
@@ -20,6 +21,7 @@ class CamInvManager
         protected DocumentClient $documents,
         protected WebhookClient $webhooks,
         protected MemberClient $members,
+        protected PollingClient $polling,
     ) {}
 
     public function client(): CamInvClient
@@ -60,5 +62,10 @@ class CamInvManager
     public function parseWebhook(array $payload): WebhookEvent
     {
         return new WebhookEvent($payload);
+    }
+
+    public function polling(): PollingClient
+    {
+        return $this->polling;
     }
 }

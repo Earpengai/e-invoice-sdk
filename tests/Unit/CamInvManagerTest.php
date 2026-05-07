@@ -9,6 +9,7 @@ use CamInv\EInvoice\Token\TokenManager;
 use CamInv\EInvoice\Document\DocumentClient;
 use CamInv\EInvoice\Webhook\WebhookClient;
 use CamInv\EInvoice\Member\MemberClient;
+use CamInv\EInvoice\Polling\PollingClient;
 use CamInv\EInvoice\Tests\TestCase;
 use Mockery;
 
@@ -28,8 +29,9 @@ class CamInvManagerTest extends TestCase
         $documents = Mockery::mock(DocumentClient::class);
         $webhooks = Mockery::mock(WebhookClient::class);
         $members = Mockery::mock(MemberClient::class);
+        $polling = Mockery::mock(PollingClient::class);
 
-        $manager = new CamInvManager($client, $oauth, $token, $documents, $webhooks, $members);
+        $manager = new CamInvManager($client, $oauth, $token, $documents, $webhooks, $members, $polling);
 
         $this->assertSame($client, $manager->client());
         $this->assertSame($oauth, $manager->oauth());
@@ -37,6 +39,7 @@ class CamInvManagerTest extends TestCase
         $this->assertSame($documents, $manager->documents());
         $this->assertSame($webhooks, $manager->webhooks());
         $this->assertSame($members, $manager->members());
+        $this->assertSame($polling, $manager->polling());
     }
 
     public function test_ubl_returns_builder_instance(): void
@@ -48,6 +51,7 @@ class CamInvManagerTest extends TestCase
             Mockery::mock(DocumentClient::class),
             Mockery::mock(WebhookClient::class),
             Mockery::mock(MemberClient::class),
+            Mockery::mock(PollingClient::class),
         );
 
         $builder = $manager->ubl();
@@ -64,6 +68,7 @@ class CamInvManagerTest extends TestCase
             Mockery::mock(DocumentClient::class),
             Mockery::mock(WebhookClient::class),
             Mockery::mock(MemberClient::class),
+            Mockery::mock(PollingClient::class),
         );
 
         $event = $manager->parseWebhook([
