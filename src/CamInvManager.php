@@ -12,6 +12,21 @@ use CamInv\EInvoice\UBL\UBLBuilder;
 use CamInv\EInvoice\Webhook\WebhookClient;
 use CamInv\EInvoice\Webhook\WebhookEvent;
 
+/**
+ * Central access point for all CamInv e-Invoice SDK services.
+ *
+ * Provides fluent access to OAuth, token management, document operations,
+ * member lookup, webhook configuration, and polling.
+ *
+ * @method \CamInv\EInvoice\Client\CamInvClient       client()
+ * @method \CamInv\EInvoice\Auth\OAuthService          oauth()
+ * @method \CamInv\EInvoice\Token\TokenManager         token()
+ * @method \CamInv\EInvoice\Document\DocumentClient    documents()
+ * @method \CamInv\EInvoice\UBL\UBLBuilder             ubl()
+ * @method \CamInv\EInvoice\Webhook\WebhookClient      webhooks()
+ * @method \CamInv\EInvoice\Member\MemberClient        members()
+ * @method \CamInv\EInvoice\Polling\PollingClient      polling()
+ */
 class CamInvManager
 {
     public function __construct(

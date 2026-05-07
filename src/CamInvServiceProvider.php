@@ -13,6 +13,23 @@ use CamInv\EInvoice\Token\TokenManager;
 use CamInv\EInvoice\Webhook\WebhookClient;
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * Laravel service provider for the CamInv e-Invoice SDK.
+ *
+ * Registers all SDK services as singletons in the Laravel container
+ * and publishes the configuration file to config/e-invoice.php.
+ *
+ * Bindings:
+ *   - caminv   → CamInvManager (the main facade accessor)
+ *   - Config
+ *   - CamInvClient
+ *   - OAuthService
+ *   - TokenManager
+ *   - DocumentClient
+ *   - WebhookClient
+ *   - MemberClient
+ *   - PollingClient
+ */
 class CamInvServiceProvider extends ServiceProvider
 {
     public function register(): void
