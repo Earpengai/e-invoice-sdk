@@ -3,6 +3,7 @@
 namespace CamInv\EInvoice\Tests\Feature;
 
 use CamInv\EInvoice\Document\DocumentClient;
+use CamInv\EInvoice\Enums\DocumentType;
 use CamInv\EInvoice\UBL\UBLBuilder;
 use CamInv\EInvoice\Webhook\WebhookEvent;
 use CamInv\EInvoice\Tests\TestCase;
@@ -50,11 +51,11 @@ class DocumentLifecycleTest extends TestCase
 
         $docClient = $this->app->make(DocumentClient::class);
 
-        $submitResult = $docClient->submit($xml, 'token-abc');
+        $submitResult = $docClient->submit(DocumentType::INVOICE, $xml, 'token-abc');
         $this->assertSame('uuid-lifecycle-001', $submitResult['documents'][0]['document_id']);
         $this->assertStringContainsString('verify.e-invoice.gov.kh', $submitResult['documents'][0]['verification_link']);
 
-        $sendResult = $docClient->send('uuid-lifecycle-001', 'KHUID00005678', 'token-abc');
+        $sendResult = $docClient->send(['uuid-lifecycle-001'], 'token-abc');
         $this->assertSame('SENT', $sendResult['documents'][0]['status']);
 
         $webhookPayload = [
@@ -80,7 +81,7 @@ class DocumentLifecycleTest extends TestCase
         $receivedXml = $docClient->getXml('uuid-recv-001', 'token');
         $this->assertSame('<Invoice>received</Invoice>', $receivedXml);
 
-        $acceptResult = $docClient->accept('uuid-recv-001', 'token');
+        $acceptResult = $docClient->accept(['uuid-recv-001'], 'token');
         $this->assertSame('ACCEPTED', $acceptResult['status']);
     }
 }

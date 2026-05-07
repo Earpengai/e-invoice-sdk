@@ -4,6 +4,7 @@ namespace CamInv\EInvoice\Tests\Unit\Document;
 
 use CamInv\EInvoice\Client\CamInvClient;
 use CamInv\EInvoice\Document\DocumentClient;
+use CamInv\EInvoice\Enums\DocumentType;
 use CamInv\EInvoice\Tests\TestCase;
 use Illuminate\Support\Facades\Http;
 
@@ -31,7 +32,7 @@ class DocumentClientTest extends TestCase
             ], 200),
         ]);
 
-        $result = $this->client->submit('<Invoice>test</Invoice>', 'token-123');
+        $result = $this->client->submit(DocumentType::INVOICE, '<Invoice>test</Invoice>', 'token-123');
 
         $this->assertSame('uuid-123', $result['documents'][0]['document_id']);
 
@@ -39,25 +40,8 @@ class DocumentClientTest extends TestCase
             $data = $request->data();
             $document = $data['documents'][0];
 
-            return $document['format'] === 'UBL'
-                && ! empty($document['document'])
-                && $document['long_time_deliver'] === 2592000;
-        });
-    }
-
-    public function test_submit_with_custom_ttl(): void
-    {
-        Http::fake([
-            'api-sandbox.e-invoice.gov.kh/api/v1/document' => Http::response([
-                'documents' => [['document_id' => 'uuid-456']],
-                'failed_documents' => [],
-            ], 200),
-        ]);
-
-        $this->client->submit('<Invoice>test</Invoice>', 'token', 86400);
-
-        Http::assertSent(function ($request) {
-            return $request->data()['documents'][0]['long_time_deliver'] === 86400;
+            return $document['document_type'] === 'INVOICE'
+                && ! empty($document['document']);
         });
     }
 
@@ -69,31 +53,31 @@ class DocumentClientTest extends TestCase
             ], 200),
         ]);
 
-        $result = $this->client->send('uuid-123', 'KHUID00005678', 'token');
+        $result = $this->client->send(['uuid-123'], 'token');
         $this->assertSame('SENT', $result['documents'][0]['status']);
     }
 
     public function test_accept(): void
     {
         Http::fake([
-            'api-sandbox.e-invoice.gov.kh/api/v1/document/uuid-123/accept' => Http::response([
+            'api-sandbox.e-invoice.gov.kh/api/v1/document/accept' => Http::response([
                 'status' => 'ACCEPTED',
             ], 200),
         ]);
 
-        $result = $this->client->accept('uuid-123', 'token');
+        $result = $this->client->accept(['uuid-123'], 'token');
         $this->assertSame('ACCEPTED', $result['status']);
     }
 
     public function test_reject(): void
     {
         Http::fake([
-            'api-sandbox.e-invoice.gov.kh/api/v1/document/uuid-123/reject' => Http::response([
+            'api-sandbox.e-invoice.gov.kh/api/v1/document/reject' => Http::response([
                 'status' => 'REJECTED',
             ], 200),
         ]);
 
-        $result = $this->client->reject('uuid-123', 'token', 'Incorrect pricing');
+        $result = $this->client->reject(['uuid-123'], 'token', 'Incorrect pricing');
         $this->assertSame('REJECTED', $result['status']);
 
         Http::assertSent(function ($request) {
@@ -104,10 +88,10 @@ class DocumentClientTest extends TestCase
     public function test_reject_without_reason(): void
     {
         Http::fake([
-            'api-sandbox.e-invoice.gov.kh/api/v1/document/uuid-123/reject' => Http::response(['status' => 'REJECTED'], 200),
+            'api-sandbox.e-invoice.gov.kh/api/v1/document/reject' => Http::response(['status' => 'REJECTED'], 200),
         ]);
 
-        $result = $this->client->reject('uuid-123', 'token');
+        $result = $this->client->reject(['uuid-123'], 'token');
         $this->assertSame('REJECTED', $result['status']);
     }
 
@@ -142,5 +126,58 @@ class DocumentClientTest extends TestCase
 
         $detail = $this->client->getDetail('uuid-123', 'token');
         $this->assertSame('SUBMITTING', $detail['status']);
+    }
+
+    public function test_update_status(): void
+    {
+        Http::fake([
+            'api-sandbox.e-invoice.gov.kh/api/v1/document/status' => Http::response([
+                'documents' => [
+                    ['document_id' => 'uuid-123', 'status' => 'ACCEPTED'],
+                ],
+            ], 200),
+        ]);
+
+        $result = $this->client->updateStatus(['uuid-123'], 'ACCEPTED', 'token');
+
+        $this->assertSame('ACCEPTED', $result['documents'][0]['status']);
+
+        Http::assertSent(function ($request) {
+            $data = $request->data();
+
+            return $data['documents'] === ['uuid-123']
+                && $data['status'] === 'ACCEPTED';
+        });
+    }
+
+    public function test_list(): void
+    {
+        Http::fake([
+            'api-sandbox.e-invoice.gov.kh/api/v1/document?type=send&page=1&size=20' => Http::response([
+                'data' => [
+                    ['document_id' => 'uuid-123', 'status' => 'SENT'],
+                ],
+                'total' => 1,
+            ], 200),
+        ]);
+
+        $result = $this->client->list('token');
+
+        $this->assertCount(1, $result['data']);
+        $this->assertSame('uuid-123', $result['data'][0]['document_id']);
+    }
+
+    public function test_list_with_document_type(): void
+    {
+        Http::fake([
+            'api-sandbox.e-invoice.gov.kh/api/v1/document?type=received&page=2&size=10&document_type=INVOICE' => Http::response([
+                'data' => [],
+                'total' => 0,
+            ], 200),
+        ]);
+
+        $result = $this->client->list('token', 'received', 2, 10, 'INVOICE');
+
+        $this->assertCount(0, $result['data']);
     }
 }
