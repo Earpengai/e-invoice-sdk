@@ -10,15 +10,26 @@ class MemberClient
         protected CamInvClient $client,
     ) {}
 
-    public function list(string $accessToken): array
+    public function list(string $accessToken, string $keyword = '', int $limit = 10): array
     {
-        return $this->client->withBearerToken($accessToken)->get('/api/v1/member');
+        return $this->client->withBearerToken($accessToken)->get('/api/v1/business', [
+            'keyword' => $keyword,
+            'limit'   => $limit,
+        ]);
     }
 
-    public function validateTaxpayer(string $tin, string $accessToken): array
+    public function get(string $accessToken, string $endpointId): array
     {
-        return $this->client->withBearerToken($accessToken)->post('/api/v1/validate-taxpayer', [
-            'tin' => $tin,
+        return $this->client->withBearerToken($accessToken)->get("/api/v1/business/{$endpointId}");
+    }
+
+    public function validateTaxpayer(string $tin, string $accessToken, string $singleId, string $companyNameEn, string $companyNameKh): array
+    {
+        return $this->client->withBearerToken($accessToken)->post('/api/v1/business/validate', [
+            'tin'             => $tin,
+            'single_id'       => $singleId,
+            'company_name_en' => $companyNameEn,
+            'company_name_kh' => $companyNameKh,
         ]);
     }
 }
