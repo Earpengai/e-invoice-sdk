@@ -83,7 +83,7 @@ class OAuthService
     {
         try {
             $response = $this->client->withBasicAuth()->post('/api/v1/auth/authorize/connect', [
-                'authToken' => $authToken,
+                'auth_token' => $authToken,
             ]);
         } catch (\CamInv\EInvoice\Exceptions\CamInvException $e) {
             throw AuthenticationException::invalidAuthToken();
