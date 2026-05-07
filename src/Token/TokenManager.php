@@ -54,6 +54,10 @@ class TokenManager
 
         $response = $this->authService->refreshAccessToken($token['refresh_token']);
 
+        if (empty($response['refresh_token'])) {
+            $response['refresh_token'] = $token['refresh_token'];
+        }
+
         $this->store->put($merchantId, $response);
 
         return $response;

@@ -23,4 +23,9 @@ class AuthenticationException extends CamInvException
     {
         return new self('Invalid or expired authorization token.', 400);
     }
+
+    public static function revokeFailed(): self
+    {
+        return new self('Failed to revoke connected member.', 400);
+    }
 }

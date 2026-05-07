@@ -58,7 +58,7 @@ class TokenRefreshTest extends TestCase
         $oauth->shouldReceive('refreshAccessToken')->with('r2')->once()
             ->andThrow(new \CamInv\EInvoice\Exceptions\AuthenticationException('Failed'));
 
-        $store->shouldReceive('put')->with('merchant-1', ['access_token' => 'new1'])->once();
+        $store->shouldReceive('put')->with('merchant-1', ['access_token' => 'new1', 'refresh_token' => 'r1'])->once();
 
         $config = new \CamInv\EInvoice\Support\Config($this->app->make('config'));
         $manager = new TokenManager($store, $oauth, $config);
@@ -66,7 +66,7 @@ class TokenRefreshTest extends TestCase
         $results = $manager->refreshExpiringTokens();
 
         $this->assertArrayHasKey('merchant-1', $results);
-        $this->assertSame(['access_token' => 'new1'], $results['merchant-1']);
+        $this->assertSame(['access_token' => 'new1', 'refresh_token' => 'r1'], $results['merchant-1']);
 
         $this->assertArrayHasKey('merchant-2', $results);
         $this->assertArrayHasKey('error', $results['merchant-2']);

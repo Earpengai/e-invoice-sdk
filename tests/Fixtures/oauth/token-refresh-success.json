@@ -1,5 +1,6 @@
 {
     "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new-access-token",
-    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new-refresh-token",
-    "expires_in": 3600
+    "expireIn": "15m",
+    "expire_at": "2026-05-07T01:37:57.510Z",
+    "expired_at": "2026-05-07T01:37:57.510Z"
 }

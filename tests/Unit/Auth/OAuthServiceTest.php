@@ -28,11 +28,11 @@ class OAuthServiceTest extends TestCase
             'api-sandbox.e-invoice.gov.kh/api/v1/configure/configure-redirect-url' => Http::response(['status' => 'ok'], 200),
         ]);
 
-        $this->service->configureRedirectUrl('https://example.com/callback');
+        $this->service->configureRedirectUrl(['https://example.com/callback']);
 
         Http::assertSent(function ($request) {
             return $request->url() === 'https://api-sandbox.e-invoice.gov.kh/api/v1/configure/configure-redirect-url'
-                && $request['redirect_url'] === 'https://example.com/callback';
+                && $request['white_list_redirect_urls'] === ['https://example.com/callback'];
         });
     }
 
@@ -63,8 +63,11 @@ class OAuthServiceTest extends TestCase
                 'access_token' => 'access-123',
                 'refresh_token' => 'refresh-456',
                 'expires_in' => 3600,
-                'endpoint_id' => 'KHUID00001234',
-                'business_info' => ['company_name' => 'Test Co.'],
+                'business_info' => [
+                    'endpoint_id' => 'KHUID00001234',
+                    'company_name_en' => 'Test Co.',
+                    'tin' => 'L001123456789',
+                ],
             ], 200),
         ]);
 
@@ -72,7 +75,8 @@ class OAuthServiceTest extends TestCase
 
         $this->assertSame('access-123', $result['access_token']);
         $this->assertSame('refresh-456', $result['refresh_token']);
-        $this->assertSame('KHUID00001234', $result['endpoint_id']);
+        $this->assertSame('KHUID00001234', $result['business_info']['endpoint_id']);
+        $this->assertSame('Test Co.', $result['business_info']['company_name_en']);
 
         Http::assertSent(function ($request) {
             return $request->url() === 'https://api-sandbox.e-invoice.gov.kh/api/v1/auth/authorize/connect'
@@ -97,23 +101,24 @@ class OAuthServiceTest extends TestCase
     public function test_refresh_access_token(): void
     {
         Http::fake([
-            'api-sandbox.e-invoice.gov.kh/api/v1/auth/authorize/connect' => Http::response([
+            'api-sandbox.e-invoice.gov.kh/api/v1/auth/token' => Http::response([
                 'access_token' => 'new-access',
-                'refresh_token' => 'new-refresh',
-                'expires_in' => 3600,
+                'expireIn' => '15m',
+                'expire_at' => '2026-05-07T01:37:57.510Z',
+                'expired_at' => '2026-05-07T01:37:57.510Z',
             ], 200),
         ]);
 
         $result = $this->service->refreshAccessToken('old-refresh');
 
         $this->assertSame('new-access', $result['access_token']);
-        $this->assertSame('new-refresh', $result['refresh_token']);
+        $this->assertSame('2026-05-07T01:37:57.510Z', $result['expire_at']);
     }
 
     public function test_refresh_access_token_failure(): void
     {
         Http::fake([
-            'api-sandbox.e-invoice.gov.kh/api/v1/auth/authorize/connect' => Http::response([
+            'api-sandbox.e-invoice.gov.kh/api/v1/auth/token' => Http::response([
                 'error' => 'invalid_grant',
             ], 400),
         ]);
@@ -122,5 +127,37 @@ class OAuthServiceTest extends TestCase
         $this->expectExceptionMessage('Access token has expired and refresh failed');
 
         $this->service->refreshAccessToken('bad-refresh');
+    }
+
+    public function test_revoke_connected_member(): void
+    {
+        Http::fake([
+            'api-sandbox.e-invoice.gov.kh/api/v1/auth/revoke' => Http::response([
+                'message' => 'Access revoked successfully',
+            ], 200),
+        ]);
+
+        $result = $this->service->revokeConnectedMember('KHUID00001234');
+
+        $this->assertSame('Access revoked successfully', $result['message']);
+
+        Http::assertSent(function ($request) {
+            return $request->url() === 'https://api-sandbox.e-invoice.gov.kh/api/v1/auth/revoke'
+                && $request['endpoint_id'] === 'KHUID00001234';
+        });
+    }
+
+    public function test_revoke_connected_member_failure(): void
+    {
+        Http::fake([
+            'api-sandbox.e-invoice.gov.kh/api/v1/auth/revoke' => Http::response([
+                'error' => 'not_found',
+            ], 400),
+        ]);
+
+        $this->expectException(\CamInv\EInvoice\Exceptions\AuthenticationException::class);
+        $this->expectExceptionMessage('Failed to revoke connected member');
+
+        $this->service->revokeConnectedMember('invalid-id');
     }
 }

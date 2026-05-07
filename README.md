@@ -61,7 +61,7 @@ CAMINV_DEFAULT_CURRENCY=KHR
 use CamInv\EInvoice\Facades\CamInv;
 
 // Step 1: Configure redirect URL (service-level, called once)
-CamInv::oauth()->configureRedirectUrl('https://your-app.com/callback');
+CamInv::oauth()->configureRedirectUrl(['https://your-app.com/callback']);
 
 // Step 2: Generate connect URL (with CSRF state parameter)
 $result = CamInv::oauth()->generateConnectUrl('https://your-app.com/callback');
@@ -70,7 +70,12 @@ $result = CamInv::oauth()->generateConnectUrl('https://your-app.com/callback');
 
 // Step 3: Exchange authorization token
 $tokens = CamInv::oauth()->exchangeAuthToken($authToken);
-// Returns: access_token, refresh_token, expires_in, endpoint_id, business_info
+// Returns: access_token, refresh_token, expires_in, business_info (containing endpoint_id, moc_id,
+//          company_name_en, company_name_kh, tin, city, phone_number, email)
+
+// Revoke a connected member
+$result = CamInv::oauth()->revokeConnectedMember($endpointId);
+// Returns: ['message' => 'Access revoked successfully']
 ```
 
 ### UBL 2.1 XML Generation
@@ -282,7 +287,7 @@ class EloquentTokenStore implements TokenStore
                 'access_token' => $tokenResponse['access_token'],
                 'refresh_token' => $tokenResponse['refresh_token'],
                 'token_expires_at' => now()->addSeconds($expiresIn),
-                'endpoint_id' => $tokenResponse['endpoint_id'] ?? null,
+                'endpoint_id' => $tokenResponse['business_info']['endpoint_id'] ?? null,
                 'business_info' => $tokenResponse['business_info'] ?? null,
                 'registration_status' => 'connected',
                 'last_token_refresh_at' => now(),
@@ -361,10 +366,11 @@ CamInv::client()->withBearerToken($token)->getRaw('/api/v1/...');
 CamInv::client()->withBasicAuth()->post('/api/v1/...');
 
 // OAuth
-CamInv::oauth()->configureRedirectUrl($url);
+CamInv::oauth()->configureRedirectUrl([$url]);
 CamInv::oauth()->generateConnectUrl($redirectUrl, $state);
 CamInv::oauth()->exchangeAuthToken($authToken);
 CamInv::oauth()->refreshAccessToken($refreshToken);
+CamInv::oauth()->revokeConnectedMember($endpointId);
 
 // Token management
 CamInv::token()->getValidAccessToken($merchantId);

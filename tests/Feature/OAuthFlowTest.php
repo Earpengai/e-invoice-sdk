@@ -24,8 +24,16 @@ class OAuthFlowTest extends TestCase
                 'access_token' => 'access-xyz',
                 'refresh_token' => 'refresh-xyz',
                 'expires_in' => 3600,
-                'endpoint_id' => 'KHUID00001234',
-                'business_info' => ['company_name' => 'Test Co.', 'tin' => 'L001123456789'],
+                'business_info' => [
+                    'endpoint_id' => 'KHUID00001234',
+                    'company_name_en' => 'Test Co.',
+                    'tin' => 'L001123456789',
+                    'moc_id' => 'MOC-001',
+                    'company_name_kh' => 'ក្រុមហ៊ុនសាកល្បង',
+                    'city' => 'Phnom Penh',
+                    'phone_number' => '012345678',
+                    'email' => 'info@testco.com',
+                ],
             ], 200),
         ]);
 
@@ -34,11 +42,11 @@ class OAuthFlowTest extends TestCase
 
         $oauthService = $this->app->make(OAuthService::class);
 
-        $oauthService->configureRedirectUrl('https://test-app.com/callback');
+        $oauthService->configureRedirectUrl(['https://test-app.com/callback']);
 
         Http::assertSent(function ($request) {
             return str_contains($request->url(), 'configure-redirect-url')
-                && $request['redirect_url'] === 'https://test-app.com/callback';
+                && $request['white_list_redirect_urls'] === ['https://test-app.com/callback'];
         });
 
         $connect = $oauthService->generateConnectUrl('https://test-app.com/callback');
@@ -52,8 +60,9 @@ class OAuthFlowTest extends TestCase
 
         $this->assertSame('access-xyz', $tokens['access_token']);
         $this->assertSame('refresh-xyz', $tokens['refresh_token']);
-        $this->assertSame('KHUID00001234', $tokens['endpoint_id']);
-        $this->assertSame('Test Co.', $tokens['business_info']['company_name']);
+        $this->assertSame('KHUID00001234', $tokens['business_info']['endpoint_id']);
+        $this->assertSame('Test Co.', $tokens['business_info']['company_name_en']);
+        $this->assertSame('L001123456789', $tokens['business_info']['tin']);
     }
 
     public function test_state_validation(): void

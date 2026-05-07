@@ -150,11 +150,11 @@ class TokenManagerTest extends TestCase
 
         $this->store->shouldReceive('get')->with('merchant-1')->once()->andReturn($expiring[0]);
         $this->authService->shouldReceive('refreshAccessToken')->with('r1')->once()->andReturn(['access_token' => 'new1']);
-        $this->store->shouldReceive('put')->with('merchant-1', ['access_token' => 'new1'])->once();
+        $this->store->shouldReceive('put')->with('merchant-1', ['access_token' => 'new1', 'refresh_token' => 'r1'])->once();
 
         $this->store->shouldReceive('get')->with('merchant-2')->once()->andReturn($expiring[1]);
         $this->authService->shouldReceive('refreshAccessToken')->with('r2')->once()->andReturn(['access_token' => 'new2']);
-        $this->store->shouldReceive('put')->with('merchant-2', ['access_token' => 'new2'])->once();
+        $this->store->shouldReceive('put')->with('merchant-2', ['access_token' => 'new2', 'refresh_token' => 'r2'])->once();
 
         $results = $this->manager->refreshExpiringTokens();
 

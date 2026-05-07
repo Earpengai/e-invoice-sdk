@@ -16,10 +16,10 @@ class OAuthService
         protected Config $config,
     ) {}
 
-    public function configureRedirectUrl(string $redirectUrl): void
+    public function configureRedirectUrl(array $redirectUrls): void
     {
         $this->client->withBasicAuth()->post('/api/v1/configure/configure-redirect-url', [
-            'redirect_url' => $redirectUrl,
+            'white_list_redirect_urls' => $redirectUrls,
         ]);
     }
 
@@ -51,15 +51,22 @@ class OAuthService
             throw AuthenticationException::invalidAuthToken();
         }
 
+        if (empty($response['business_info']) || ! is_array($response['business_info'])) {
+            throw AuthenticationException::invalidAuthToken();
+        }
+
+        if (empty($response['business_info']['endpoint_id'])) {
+            throw AuthenticationException::invalidAuthToken();
+        }
+
         return $response;
     }
 
     public function refreshAccessToken(string $refreshToken): array
     {
         try {
-            $response = $this->client->post('/api/v1/auth/authorize/connect', [
+            $response = $this->client->post('/api/v1/auth/token', [
                 'refresh_token' => $refreshToken,
-                'grant_type' => 'refresh_token',
             ]);
         } catch (\CamInv\EInvoice\Exceptions\CamInvException $e) {
             throw AuthenticationException::tokenExpired();
@@ -67,6 +74,19 @@ class OAuthService
 
         if (empty($response['access_token'])) {
             throw AuthenticationException::tokenExpired();
+        }
+
+        return $response;
+    }
+
+    public function revokeConnectedMember(string $endpointId): array
+    {
+        try {
+            $response = $this->client->withBasicAuth()->post('/api/v1/auth/revoke', [
+                'endpoint_id' => $endpointId,
+            ]);
+        } catch (\CamInv\EInvoice\Exceptions\CamInvException $e) {
+            throw AuthenticationException::revokeFailed();
         }
 
         return $response;

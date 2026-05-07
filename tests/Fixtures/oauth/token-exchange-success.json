@@ -2,10 +2,14 @@
     "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-access-token",
     "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-refresh-token",
     "expires_in": 3600,
-    "endpoint_id": "KHUID00001234",
     "business_info": {
-        "company_name": "Test Supplier Ltd.",
+        "endpoint_id": "KHUID00001234",
+        "moc_id": "MOC-001",
+        "company_name_en": "Test Supplier Ltd.",
+        "company_name_kh": "ក្រុមហ៊ុនសាកល្បង",
         "tin": "L001123456789",
-        "moc_id": "MOC-001"
+        "city": "Phnom Penh",
+        "phone_number": "012345678",
+        "email": "info@testsupplier.com"
     }
 }
