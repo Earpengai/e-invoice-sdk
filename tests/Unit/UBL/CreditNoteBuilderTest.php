@@ -12,6 +12,7 @@ class CreditNoteBuilderTest extends TestCase
         $xml = UBLBuilder::creditNote()
             ->setId('CN-001')
             ->setIssueDate('2026-05-06')
+            ->setNote('Wrong number of items')
             ->setOriginalInvoiceId('INV-001')
             ->setSupplier(['party_name' => 'Supplier'])
             ->setCustomer(['party_name' => 'Customer'])
@@ -29,12 +30,13 @@ class CreditNoteBuilderTest extends TestCase
         $xml = UBLBuilder::creditNote()
             ->setId('CN-002')
             ->setIssueDate('2026-05-06')
+            ->setNote('Returned items')
             ->setOriginalInvoiceId('INV-001')
             ->setSupplier(['party_name' => 'Supplier'])
             ->setCustomer(['party_name' => 'Customer'])
             ->addLine([
                 'id' => '1',
-                'quantity' => 5,
+                'credited_quantity' => 5,
                 'unit_code' => 'EA',
                 'item' => ['name' => 'Returned Item'],
             ])
@@ -52,6 +54,21 @@ class CreditNoteBuilderTest extends TestCase
         UBLBuilder::creditNote()
             ->setId('CN-001')
             ->setIssueDate('2026-05-06')
+            ->setNote('Test note')
+            ->setSupplier(['party_name' => 'Supplier'])
+            ->setCustomer(['party_name' => 'Customer'])
+            ->build();
+    }
+
+    public function test_validation_requires_note(): void
+    {
+        $this->expectException(\CamInv\EInvoice\Exceptions\ValidationException::class);
+        $this->expectExceptionMessage('note');
+
+        UBLBuilder::creditNote()
+            ->setId('CN-001')
+            ->setIssueDate('2026-05-06')
+            ->setOriginalInvoiceId('INV-001')
             ->setSupplier(['party_name' => 'Supplier'])
             ->setCustomer(['party_name' => 'Customer'])
             ->build();

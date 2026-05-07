@@ -36,14 +36,14 @@ class DocumentLifecycleTest extends TestCase
                 'endpoint_id' => 'KHUID00001234',
                 'party_name' => 'Test Supplier',
                 'postal_address' => ['street_name' => '123 St', 'city_name' => 'PP', 'country' => ['identification_code' => 'KH']],
-                'party_tax_scheme' => ['company_id' => 'T001', 'tax_scheme_id' => 'VAT'],
-                'party_legal_entity' => ['registration_name' => 'Test Supplier'],
-            ])
-            ->setCustomer([
-                'endpoint_id' => 'KHUID00005678',
-                'party_name' => 'Test Customer',
-                'postal_address' => ['street_name' => '456 St', 'city_name' => 'SR', 'country' => ['identification_code' => 'KH']],
-                'party_tax_scheme' => ['company_id' => 'T002', 'tax_scheme_id' => 'VAT'],
+            'party_tax_scheme' => ['company_id' => 'T001', 'tax_scheme_id' => 'S'],
+            'party_legal_entity' => ['registration_name' => 'Test Supplier'],
+        ])
+        ->setCustomer([
+            'endpoint_id' => 'KHUID00005678',
+            'party_name' => 'Test Customer',
+            'postal_address' => ['street_name' => '456 St', 'city_name' => 'SR', 'country' => ['identification_code' => 'KH']],
+            'party_tax_scheme' => ['company_id' => 'T002', 'tax_scheme_id' => 'S'],
                 'party_legal_entity' => ['registration_name' => 'Test Customer'],
             ])
             ->addLine(['id' => '1', 'item' => ['name' => 'Product A']])
@@ -73,7 +73,7 @@ class DocumentLifecycleTest extends TestCase
     {
         Http::fake([
             'api-sandbox.e-invoice.gov.kh/api/v1/document/uuid-recv-001/xml' => Http::response('<Invoice>received</Invoice>', 200),
-            'api-sandbox.e-invoice.gov.kh/api/v1/document/uuid-recv-001/accept' => Http::response(['status' => 'ACCEPTED'], 200),
+            'api-sandbox.e-invoice.gov.kh/api/v1/document/accept' => Http::response(['status' => 'ACCEPTED'], 200),
         ]);
 
         $docClient = $this->app->make(DocumentClient::class);

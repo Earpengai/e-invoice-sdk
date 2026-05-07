@@ -4,25 +4,28 @@ namespace CamInv\EInvoice\Enums;
 
 enum TaxCategory: string
 {
-    case STANDARD = 'S';
-    case ZERO_RATED = 'Z';
-    case EXEMPT = 'E';
+    case VAT = 'VAT';
+    case SPECIFIC_TAX = 'SP';
+    case PUBLIC_LIGHTING_TAX = 'PLT';
+    case ACCOMMODATION_TAX = 'AT';
 
     public function label(): string
     {
         return match ($this) {
-            self::STANDARD => 'Standard Rate',
-            self::ZERO_RATED => 'Zero Rated',
-            self::EXEMPT => 'Exempt',
+            self::VAT => 'Value Added Tax',
+            self::SPECIFIC_TAX => 'Specific Tax',
+            self::PUBLIC_LIGHTING_TAX => 'Public Lighting Tax',
+            self::ACCOMMODATION_TAX => 'Accommodation Tax',
         };
     }
 
     public function defaultRate(): float
     {
         return match ($this) {
-            self::STANDARD => 10.00,
-            self::ZERO_RATED => 0.00,
-            self::EXEMPT => 0.00,
+            self::VAT => 10.00,
+            self::SPECIFIC_TAX => 0.00,
+            self::PUBLIC_LIGHTING_TAX => 0.00,
+            self::ACCOMMODATION_TAX => 0.00,
         };
     }
 }

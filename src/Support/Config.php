@@ -52,24 +52,14 @@ class Config
         return (int) $this->get('http.retry_delay', 100);
     }
 
-    public function ublNamespaces(): array
-    {
-        return (array) $this->get('ubl.namespaces', []);
-    }
-
-    public function ublCustomizationId(): string
-    {
-        return (string) $this->get('ubl.customization_id', '');
-    }
-
-    public function ublProfileId(): string
-    {
-        return (string) $this->get('ubl.profile_id', '');
-    }
-
     public function taxCategories(): array
     {
         return (array) $this->get('ubl.tax_categories', []);
+    }
+
+    public function taxSchemes(): array
+    {
+        return (array) $this->get('ubl.tax_schemes', []);
     }
 
     public function defaultCurrency(): string

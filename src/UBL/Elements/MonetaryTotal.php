@@ -7,9 +7,9 @@ use DOMElement;
 
 class MonetaryTotal
 {
-    public static function build(DOMDocument $doc, DOMElement $parent, array $data): void
+    public static function build(DOMDocument $doc, DOMElement $parent, array $data, string $elementName = 'LegalMonetaryTotal'): void
     {
-        $total = $doc->createElement('cac:LegalMonetaryTotal');
+        $total = $doc->createElement('cac:' . $elementName);
 
         $fields = [
             'line_extension_amount' => 'cbc:LineExtensionAmount',

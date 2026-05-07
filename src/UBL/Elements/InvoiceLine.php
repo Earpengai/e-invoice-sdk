@@ -13,10 +13,6 @@ class InvoiceLine
 
         $line->appendChild($doc->createElement('cbc:ID', $data['id'] ?? '1'));
 
-        if (! empty($data['note'])) {
-            $line->appendChild($doc->createElement('cbc:Note', $data['note']));
-        }
-
         if (isset($data['quantity'])) {
             $qty = $doc->createElement('cbc:InvoicedQuantity', number_format((float) $data['quantity'], 4, '.', ''));
             $qty->setAttribute('unitCode', $data['unit_code'] ?? 'EA');
@@ -27,6 +23,10 @@ class InvoiceLine
             $amt = $doc->createElement('cbc:LineExtensionAmount', number_format((float) $data['line_extension_amount'], 2, '.', ''));
             $amt->setAttribute('currencyID', $data['currency'] ?? 'KHR');
             $line->appendChild($amt);
+        }
+
+        if (! empty($data['allowance_charges'])) {
+            AllowanceCharge::build($doc, $line, $data['allowance_charges']);
         }
 
         if (! empty($data['tax_total'])) {
@@ -65,15 +65,21 @@ class InvoiceLine
             $item->appendChild($sii);
         }
 
-        if (! empty($data['classifications'])) {
-            foreach ($data['classifications'] as $classification) {
-                $cc = $doc->createElement('cac:CommodityClassification');
-                $cc->appendChild($doc->createElement('cbc:ItemClassificationCode', $classification['code']));
-                if (! empty($classification['list_id'])) {
-                    $cc->firstChild->setAttribute('listID', $classification['list_id']);
-                }
-                $item->appendChild($cc);
+        if (! empty($data['standard_item_id'])) {
+            $sii = $doc->createElement('cac:StandardItemIdentification');
+            $sii->appendChild($doc->createElement('cbc:ID', $data['standard_item_id']));
+            $item->appendChild($sii);
+        }
+
+        if (! empty($data['origin_country'])) {
+            $oc = $doc->createElement('cac:OriginCountry');
+            if (! empty($data['origin_country']['identification_code'])) {
+                $oc->appendChild($doc->createElement('cbc:IdentificationCode', $data['origin_country']['identification_code']));
             }
+            if (! empty($data['origin_country']['name'])) {
+                $oc->appendChild($doc->createElement('cbc:Name', $data['origin_country']['name']));
+            }
+            $item->appendChild($oc);
         }
 
         $parent->appendChild($item);

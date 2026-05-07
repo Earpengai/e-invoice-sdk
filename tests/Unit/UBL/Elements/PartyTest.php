@@ -19,8 +19,11 @@ class PartyTest extends TestCase
             'scheme_id' => 'KHM',
             'party_name' => 'Test Company Ltd.',
             'postal_address' => [
+                'floor' => '3',
+                'room' => '301',
                 'street_name' => '123 Main St',
                 'additional_street_name' => 'Floor 2',
+                'building_name' => 'Business Tower',
                 'city_name' => 'Phnom Penh',
                 'postal_zone' => '12000',
                 'country_subentity' => 'Phnom Penh',
@@ -31,7 +34,7 @@ class PartyTest extends TestCase
             ],
             'party_tax_scheme' => [
                 'company_id' => 'L001123456789',
-                'tax_scheme_id' => 'VAT',
+                'tax_scheme_id' => 'S',
             ],
             'party_legal_entity' => [
                 'registration_name' => 'Test Company Ltd.',
@@ -49,8 +52,11 @@ class PartyTest extends TestCase
         $this->assertStringContainsString('<cac:Party>', $xml);
         $this->assertStringContainsString('<cbc:EndpointID schemeID="KHM">KHUID00001234</cbc:EndpointID>', $xml);
         $this->assertStringContainsString('<cbc:Name>Test Company Ltd.</cbc:Name>', $xml);
+        $this->assertStringContainsString('<cbc:Floor>3</cbc:Floor>', $xml);
+        $this->assertStringContainsString('<cbc:Room>301</cbc:Room>', $xml);
         $this->assertStringContainsString('<cbc:StreetName>123 Main St</cbc:StreetName>', $xml);
         $this->assertStringContainsString('<cbc:AdditionalStreetName>Floor 2</cbc:AdditionalStreetName>', $xml);
+        $this->assertStringContainsString('<cbc:BuildingName>Business Tower</cbc:BuildingName>', $xml);
         $this->assertStringContainsString('<cbc:CityName>Phnom Penh</cbc:CityName>', $xml);
         $this->assertStringContainsString('<cbc:PostalZone>12000</cbc:PostalZone>', $xml);
         $this->assertStringContainsString('<cbc:CountrySubentity>Phnom Penh</cbc:CountrySubentity>', $xml);
@@ -60,6 +66,7 @@ class PartyTest extends TestCase
         $this->assertStringContainsString('<cbc:RegistrationName>Test Company Ltd.</cbc:RegistrationName>', $xml);
         $this->assertStringContainsString('<cbc:Telephone>012345678</cbc:Telephone>', $xml);
         $this->assertStringContainsString('<cbc:ElectronicMail>john@company.com</cbc:ElectronicMail>', $xml);
+        $this->assertStringContainsString('<cbc:ID>S</cbc:ID>', $xml);
     }
 
     public function test_minimal_party(): void

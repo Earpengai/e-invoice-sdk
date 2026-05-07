@@ -56,12 +56,24 @@ class Party
     {
         $address = $doc->createElement('cac:PostalAddress');
 
+        if (! empty($data['floor'])) {
+            $address->appendChild($doc->createElement('cbc:Floor', $data['floor']));
+        }
+
+        if (! empty($data['room'])) {
+            $address->appendChild($doc->createElement('cbc:Room', $data['room']));
+        }
+
         if (! empty($data['street_name'])) {
             $address->appendChild($doc->createElement('cbc:StreetName', $data['street_name']));
         }
 
         if (! empty($data['additional_street_name'])) {
             $address->appendChild($doc->createElement('cbc:AdditionalStreetName', $data['additional_street_name']));
+        }
+
+        if (! empty($data['building_name'])) {
+            $address->appendChild($doc->createElement('cbc:BuildingName', $data['building_name']));
         }
 
         if (! empty($data['city_name'])) {
@@ -97,7 +109,7 @@ class Party
         }
 
         $scheme = $doc->createElement('cac:TaxScheme');
-        $scheme->appendChild($doc->createElement('cbc:ID', $data['tax_scheme_id'] ?? 'VAT'));
+        $scheme->appendChild($doc->createElement('cbc:ID', $data['tax_scheme_id'] ?? 'S'));
         $taxScheme->appendChild($scheme);
 
         return $taxScheme;

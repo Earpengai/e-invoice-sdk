@@ -2,8 +2,6 @@
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
          xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
          xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
-  <cbc:CustomizationID>urn:cen.eu:en16931:2017</cbc:CustomizationID>
-  <cbc:ProfileID>urn:fdc:peppol.eu:2017:poacc:billing:01:1.0</cbc:ProfileID>
   <cbc:ID>INV-001</cbc:ID>
   <cbc:IssueDate>2026-05-06</cbc:IssueDate>
   <cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>
@@ -24,7 +22,7 @@
       <cac:PartyTaxScheme>
         <cbc:CompanyID>L001123456789</cbc:CompanyID>
         <cac:TaxScheme>
-          <cbc:ID>VAT</cbc:ID>
+          <cbc:ID>S</cbc:ID>
         </cac:TaxScheme>
       </cac:PartyTaxScheme>
       <cac:PartyLegalEntity>
@@ -48,7 +46,7 @@
       <cac:PartyTaxScheme>
         <cbc:CompanyID>L002987654321</cbc:CompanyID>
         <cac:TaxScheme>
-          <cbc:ID>VAT</cbc:ID>
+          <cbc:ID>S</cbc:ID>
         </cac:TaxScheme>
       </cac:PartyTaxScheme>
       <cac:PartyLegalEntity>
@@ -62,10 +60,10 @@
       <cbc:TaxableAmount>100.00</cbc:TaxableAmount>
       <cbc:TaxAmount>10.00</cbc:TaxAmount>
       <cac:TaxCategory>
-        <cbc:ID>S</cbc:ID>
+        <cbc:ID>VAT</cbc:ID>
         <cbc:Percent>10.00</cbc:Percent>
         <cac:TaxScheme>
-          <cbc:ID>VAT</cbc:ID>
+          <cbc:ID>S</cbc:ID>
         </cac:TaxScheme>
       </cac:TaxCategory>
     </cac:TaxSubtotal>
@@ -86,10 +84,10 @@
         <cbc:TaxableAmount>100.00</cbc:TaxableAmount>
         <cbc:TaxAmount>10.00</cbc:TaxAmount>
         <cac:TaxCategory>
-          <cbc:ID>S</cbc:ID>
+          <cbc:ID>VAT</cbc:ID>
           <cbc:Percent>10.00</cbc:Percent>
           <cac:TaxScheme>
-            <cbc:ID>VAT</cbc:ID>
+            <cbc:ID>S</cbc:ID>
           </cac:TaxScheme>
         </cac:TaxCategory>
       </cac:TaxSubtotal>

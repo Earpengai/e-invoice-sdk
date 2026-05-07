@@ -33,6 +33,23 @@ class MonetaryTotalTest extends TestCase
         $this->assertStringContainsString('<cbc:PayableAmount currencyID="KHR">107.05</cbc:PayableAmount>', $xml);
     }
 
+    public function test_requested_monetary_total(): void
+    {
+        $doc = new DOMDocument('1.0', 'UTF-8');
+        $root = $doc->createElement('Root');
+        $doc->appendChild($root);
+
+        MonetaryTotal::build($doc, $root, [
+            'line_extension_amount' => 50.00,
+            'payable_amount' => 55.00,
+        ], 'RequestedMonetaryTotal');
+
+        $xml = $doc->saveXML();
+
+        $this->assertStringContainsString('<cac:RequestedMonetaryTotal>', $xml);
+        $this->assertStringNotContainsString('<cac:LegalMonetaryTotal>', $xml);
+    }
+
     public function test_partial_fields(): void
     {
         $doc = new DOMDocument('1.0', 'UTF-8');

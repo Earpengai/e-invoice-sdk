@@ -7,24 +7,31 @@ use CamInv\EInvoice\Tests\TestCase;
 
 class TaxCategoryTest extends TestCase
 {
-    public function test_standard_rate(): void
+    public function test_vat(): void
     {
-        $this->assertSame('S', TaxCategory::STANDARD->value);
-        $this->assertSame('Standard Rate', TaxCategory::STANDARD->label());
-        $this->assertSame(10.00, TaxCategory::STANDARD->defaultRate());
+        $this->assertSame('VAT', TaxCategory::VAT->value);
+        $this->assertSame('Value Added Tax', TaxCategory::VAT->label());
+        $this->assertSame(10.00, TaxCategory::VAT->defaultRate());
     }
 
-    public function test_zero_rated(): void
+    public function test_specific_tax(): void
     {
-        $this->assertSame('Z', TaxCategory::ZERO_RATED->value);
-        $this->assertSame('Zero Rated', TaxCategory::ZERO_RATED->label());
-        $this->assertSame(0.00, TaxCategory::ZERO_RATED->defaultRate());
+        $this->assertSame('SP', TaxCategory::SPECIFIC_TAX->value);
+        $this->assertSame('Specific Tax', TaxCategory::SPECIFIC_TAX->label());
+        $this->assertSame(0.00, TaxCategory::SPECIFIC_TAX->defaultRate());
     }
 
-    public function test_exempt(): void
+    public function test_public_lighting_tax(): void
     {
-        $this->assertSame('E', TaxCategory::EXEMPT->value);
-        $this->assertSame('Exempt', TaxCategory::EXEMPT->label());
-        $this->assertSame(0.00, TaxCategory::EXEMPT->defaultRate());
+        $this->assertSame('PLT', TaxCategory::PUBLIC_LIGHTING_TAX->value);
+        $this->assertSame('Public Lighting Tax', TaxCategory::PUBLIC_LIGHTING_TAX->label());
+        $this->assertSame(0.00, TaxCategory::PUBLIC_LIGHTING_TAX->defaultRate());
+    }
+
+    public function test_accommodation_tax(): void
+    {
+        $this->assertSame('AT', TaxCategory::ACCOMMODATION_TAX->value);
+        $this->assertSame('Accommodation Tax', TaxCategory::ACCOMMODATION_TAX->label());
+        $this->assertSame(0.00, TaxCategory::ACCOMMODATION_TAX->defaultRate());
     }
 }

@@ -13,12 +13,14 @@ class DebitNoteLine
 
         $line->appendChild($doc->createElement('cbc:ID', $data['id'] ?? '1'));
 
-        if (! empty($data['note'])) {
-            $line->appendChild($doc->createElement('cbc:Note', $data['note']));
+        if (isset($data['invoiced_quantity'])) {
+            $qty = $doc->createElement('cbc:InvoicedQuantity', number_format((float) $data['invoiced_quantity'], 4, '.', ''));
+            $qty->setAttribute('unitCode', $data['unit_code'] ?? 'EA');
+            $line->appendChild($qty);
         }
 
-        if (isset($data['quantity'])) {
-            $qty = $doc->createElement('cbc:DebitedQuantity', number_format((float) $data['quantity'], 4, '.', ''));
+        if (isset($data['debited_quantity'])) {
+            $qty = $doc->createElement('cbc:DebitedQuantity', number_format((float) $data['debited_quantity'], 4, '.', ''));
             $qty->setAttribute('unitCode', $data['unit_code'] ?? 'EA');
             $line->appendChild($qty);
         }
@@ -32,6 +34,10 @@ class DebitNoteLine
         if (! empty($data['tax_total'])) {
             $taxSubtotals = isset($data['tax_total'][0]) ? $data['tax_total'] : [$data['tax_total']];
             TaxTotal::build($doc, $line, $taxSubtotals);
+        }
+
+        if (! empty($data['allowance_charges'])) {
+            AllowanceCharge::build($doc, $line, $data['allowance_charges']);
         }
 
         if (! empty($data['item'])) {

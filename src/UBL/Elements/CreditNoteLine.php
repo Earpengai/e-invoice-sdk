@@ -13,12 +13,8 @@ class CreditNoteLine
 
         $line->appendChild($doc->createElement('cbc:ID', $data['id'] ?? '1'));
 
-        if (! empty($data['note'])) {
-            $line->appendChild($doc->createElement('cbc:Note', $data['note']));
-        }
-
-        if (isset($data['quantity'])) {
-            $qty = $doc->createElement('cbc:CreditedQuantity', number_format((float) $data['quantity'], 4, '.', ''));
+        if (isset($data['invoiced_quantity'])) {
+            $qty = $doc->createElement('cbc:InvoicedQuantity', number_format((float) $data['invoiced_quantity'], 4, '.', ''));
             $qty->setAttribute('unitCode', $data['unit_code'] ?? 'EA');
             $line->appendChild($qty);
         }
@@ -27,6 +23,10 @@ class CreditNoteLine
             $amt = $doc->createElement('cbc:LineExtensionAmount', number_format((float) $data['line_extension_amount'], 2, '.', ''));
             $amt->setAttribute('currencyID', $data['currency'] ?? 'KHR');
             $line->appendChild($amt);
+        }
+
+        if (! empty($data['allowance_charges'])) {
+            AllowanceCharge::build($doc, $line, $data['allowance_charges']);
         }
 
         if (! empty($data['tax_total'])) {
@@ -40,6 +40,12 @@ class CreditNoteLine
 
         if (! empty($data['price'])) {
             InvoiceLine::buildPrice($doc, $line, $data['price'], $data['currency'] ?? 'KHR');
+        }
+
+        if (isset($data['credited_quantity'])) {
+            $qty = $doc->createElement('cbc:CreditedQuantity', number_format((float) $data['credited_quantity'], 4, '.', ''));
+            $qty->setAttribute('unitCode', $data['unit_code'] ?? 'EA');
+            $line->appendChild($qty);
         }
 
         $parent->appendChild($line);

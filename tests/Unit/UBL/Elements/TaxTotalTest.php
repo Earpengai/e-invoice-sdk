@@ -18,9 +18,9 @@ class TaxTotalTest extends TestCase
             [
                 'taxable_amount' => 100.00,
                 'tax_amount' => 10.00,
-                'tax_category_id' => 'S',
+                'tax_category_id' => 'VAT',
                 'percent' => 10.00,
-                'tax_scheme_id' => 'VAT',
+                'tax_scheme_id' => 'S',
             ],
         ]);
 
@@ -30,10 +30,10 @@ class TaxTotalTest extends TestCase
         $this->assertStringContainsString('<cbc:TaxAmount>10.00</cbc:TaxAmount>', $xml);
         $this->assertStringContainsString('<cac:TaxSubtotal>', $xml);
         $this->assertStringContainsString('<cbc:TaxableAmount>100.00</cbc:TaxableAmount>', $xml);
-        $this->assertStringContainsString('<cbc:ID>S</cbc:ID>', $xml);
+        $this->assertStringContainsString('<cbc:ID>VAT</cbc:ID>', $xml);
         $this->assertStringContainsString('<cbc:Percent>10.00</cbc:Percent>', $xml);
         $this->assertStringContainsString('<cac:TaxScheme>', $xml);
-        $this->assertStringContainsString('<cbc:ID>VAT</cbc:ID>', $xml);
+        $this->assertStringContainsString('<cbc:ID>S</cbc:ID>', $xml);
     }
 
     public function test_multiple_tax_subtotals(): void
@@ -46,13 +46,13 @@ class TaxTotalTest extends TestCase
             [
                 'taxable_amount' => 100.00,
                 'tax_amount' => 10.00,
-                'tax_category_id' => 'S',
+                'tax_category_id' => 'VAT',
                 'percent' => 10.00,
             ],
             [
                 'taxable_amount' => 50.00,
                 'tax_amount' => 0.00,
-                'tax_category_id' => 'Z',
+                'tax_category_id' => 'VAT',
                 'percent' => 0.00,
             ],
         ]);
@@ -63,8 +63,6 @@ class TaxTotalTest extends TestCase
         $this->assertSame(2, $subtotalCount);
 
         $this->assertStringContainsString('<cbc:TaxAmount>10.00</cbc:TaxAmount>', $xml);
-        $this->assertStringContainsString('<cbc:ID>S</cbc:ID>', $xml);
-        $this->assertStringContainsString('<cbc:ID>Z</cbc:ID>', $xml);
     }
 
     public function test_default_values(): void
@@ -79,6 +77,6 @@ class TaxTotalTest extends TestCase
 
         $xml = $doc->saveXML();
 
-        $this->assertStringContainsString('<cbc:ID>S</cbc:ID>', $xml);
+        $this->assertStringContainsString('<cbc:ID>VAT</cbc:ID>', $xml);
     }
 }

@@ -61,17 +61,15 @@ class ConfigTest extends TestCase
 
     public function test_ubl_settings(): void
     {
-        $namespaces = $this->config->ublNamespaces();
-        $this->assertIsArray($namespaces);
-        $this->assertArrayHasKey('cac', $namespaces);
-
-        $this->assertSame('urn:cen.eu:en16931:2017', $this->config->ublCustomizationId());
-        $this->assertSame('urn:fdc:peppol.eu:2017:poacc:billing:01:1.0', $this->config->ublProfileId());
-
         $taxCategories = $this->config->taxCategories();
         $this->assertIsArray($taxCategories);
-        $this->assertArrayHasKey('S', $taxCategories);
-        $this->assertSame(10.00, $taxCategories['S']['rate']);
+        $this->assertArrayHasKey('VAT', $taxCategories);
+        $this->assertSame('Value Added Tax', $taxCategories['VAT']['name']);
+
+        $taxSchemes = $this->config->taxSchemes();
+        $this->assertIsArray($taxSchemes);
+        $this->assertArrayHasKey('S', $taxSchemes);
+        $this->assertSame('Standard', $taxSchemes['S']['name']);
     }
 
     public function test_default_currency(): void

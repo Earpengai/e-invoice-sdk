@@ -16,6 +16,11 @@ class InvoiceBuilder extends BaseBuilder
         return 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2';
     }
 
+    protected function getMonetaryTotalElement(): string
+    {
+        return 'LegalMonetaryTotal';
+    }
+
     protected function buildLine(\DOMElement $root, array $data): void
     {
         Elements\InvoiceLine::build($this->doc, $root, $data);

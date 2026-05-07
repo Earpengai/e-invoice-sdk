@@ -80,17 +80,15 @@ return [
     */
 
     'ubl' => [
-        'namespaces' => [
-            '' => 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2',
-            'cac' => 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2',
-            'cbc' => 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2',
-        ],
-        'customization_id' => 'urn:cen.eu:en16931:2017',
-        'profile_id' => 'urn:fdc:peppol.eu:2017:poacc:billing:01:1.0',
         'tax_categories' => [
-            'S' => ['name' => 'Standard Rate', 'rate' => 10.00],
-            'Z' => ['name' => 'Zero Rated', 'rate' => 0.00],
-            'E' => ['name' => 'Exempt', 'rate' => 0.00],
+            'VAT' => ['name' => 'Value Added Tax'],
+            'SP' => ['name' => 'Specific Tax'],
+            'PLT' => ['name' => 'Public Lighting Tax'],
+            'AT' => ['name' => 'Accommodation Tax'],
+        ],
+        'tax_schemes' => [
+            'S' => ['name' => 'Standard'],
+            'Z' => ['name' => 'Zero'],
         ],
         'default_currency' => env('CAMINV_DEFAULT_CURRENCY', 'KHR'),
     ],

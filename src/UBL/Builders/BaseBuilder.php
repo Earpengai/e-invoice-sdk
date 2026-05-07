@@ -14,6 +14,30 @@ abstract class BaseBuilder
 
     protected array $taxData = [];
 
+    protected ?string $id = null;
+
+    protected ?string $issueDate = null;
+
+    protected ?string $dueDate = null;
+
+    protected ?string $note = null;
+
+    protected ?string $invoiceTypeCode = null;
+
+    protected ?array $supplier = null;
+
+    protected ?array $customer = null;
+
+    protected ?array $paymentTerms = null;
+
+    protected ?array $additionalDocumentReferences = null;
+
+    protected ?array $allowanceCharges = null;
+
+    protected ?array $taxExchangeRate = null;
+
+    protected ?array $monetaryTotal = null;
+
     public function __construct(array $options = [])
     {
         $this->doc = new DOMDocument('1.0', 'UTF-8');
@@ -25,19 +49,7 @@ abstract class BaseBuilder
 
     abstract protected function getNamespace(): string;
 
-    public function setCustomizationId(string $id): static
-    {
-        $this->customizationId = $id;
-
-        return $this;
-    }
-
-    public function setProfileId(string $id): static
-    {
-        $this->profileId = $id;
-
-        return $this;
-    }
+    abstract protected function getMonetaryTotalElement(): string;
 
     public function setId(string $id): static
     {
@@ -81,13 +93,6 @@ abstract class BaseBuilder
         return $this;
     }
 
-    public function setBuyerReference(?string $reference): static
-    {
-        $this->buyerReference = $reference;
-
-        return $this;
-    }
-
     public function setSupplier(array $data): static
     {
         $this->supplier = $data;
@@ -105,6 +110,27 @@ abstract class BaseBuilder
     public function setPaymentTerms(array $data): static
     {
         $this->paymentTerms = $data;
+
+        return $this;
+    }
+
+    public function setAdditionalDocumentReferences(array $refs): static
+    {
+        $this->additionalDocumentReferences = $refs;
+
+        return $this;
+    }
+
+    public function setAllowanceCharges(array $items): static
+    {
+        $this->allowanceCharges = $items;
+
+        return $this;
+    }
+
+    public function setTaxExchangeRate(array $data): static
+    {
+        $this->taxExchangeRate = $data;
 
         return $this;
     }
@@ -164,14 +190,6 @@ abstract class BaseBuilder
     {
         $cbc = 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2';
 
-        if (isset($this->customizationId)) {
-            $root->appendChild($this->doc->createElementNS($cbc, 'cbc:CustomizationID', $this->customizationId));
-        }
-
-        if (isset($this->profileId)) {
-            $root->appendChild($this->doc->createElementNS($cbc, 'cbc:ProfileID', $this->profileId));
-        }
-
         if (isset($this->id)) {
             $root->appendChild($this->doc->createElementNS($cbc, 'cbc:ID', $this->id));
         }
@@ -193,14 +211,14 @@ abstract class BaseBuilder
         }
 
         $root->appendChild($this->doc->createElementNS($cbc, 'cbc:DocumentCurrencyCode', $this->currency));
-
-        if (isset($this->buyerReference)) {
-            $root->appendChild($this->doc->createElementNS($cbc, 'cbc:BuyerReference', $this->buyerReference));
-        }
     }
 
     protected function buildBody(\DOMElement $root): void
     {
+        if (isset($this->additionalDocumentReferences)) {
+            \CamInv\EInvoice\UBL\Elements\AdditionalDocumentReference::build($this->doc, $root, $this->additionalDocumentReferences);
+        }
+
         if (isset($this->supplier)) {
             \CamInv\EInvoice\UBL\Elements\SupplierParty::build($this->doc, $root, $this->supplier);
         }
@@ -213,12 +231,20 @@ abstract class BaseBuilder
             \CamInv\EInvoice\UBL\Elements\PaymentTerms::build($this->doc, $root, $this->paymentTerms);
         }
 
+        if (isset($this->allowanceCharges)) {
+            \CamInv\EInvoice\UBL\Elements\AllowanceCharge::build($this->doc, $root, $this->allowanceCharges);
+        }
+
+        if (isset($this->taxExchangeRate)) {
+            \CamInv\EInvoice\UBL\Elements\TaxExchangeRate::build($this->doc, $root, $this->taxExchangeRate);
+        }
+
         if (! empty($this->taxData)) {
             \CamInv\EInvoice\UBL\Elements\TaxTotal::build($this->doc, $root, $this->taxData);
         }
 
         if (isset($this->monetaryTotal)) {
-            \CamInv\EInvoice\UBL\Elements\MonetaryTotal::build($this->doc, $root, $this->monetaryTotal);
+            \CamInv\EInvoice\UBL\Elements\MonetaryTotal::build($this->doc, $root, $this->monetaryTotal, $this->getMonetaryTotalElement());
         }
 
         foreach ($this->lines as $line) {
