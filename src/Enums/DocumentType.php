@@ -2,6 +2,11 @@
 
 namespace CamInv\EInvoice\Enums;
 
+/**
+ * Document type identifiers used when submitting documents.
+ *
+ * @see https://developer.e-invoice.gov.kh/data-type/document-type
+ */
 enum DocumentType: string
 {
     case INVOICE = 'INVOICE';

@@ -2,6 +2,11 @@
 
 namespace CamInv\EInvoice\Enums;
 
+/**
+ * Document lifecycle status values.
+ *
+ * @see https://developer.e-invoice.gov.kh/data-type/document-status
+ */
 enum DocumentStatus: string
 {
     case DRAFT = 'DRAFT';

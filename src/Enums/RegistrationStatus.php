@@ -2,6 +2,9 @@
 
 namespace CamInv\EInvoice\Enums;
 
+/**
+ * Registration status for a connected business member.
+ */
 enum RegistrationStatus: string
 {
     case PENDING = 'pending';

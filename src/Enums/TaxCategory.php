@@ -2,6 +2,11 @@
 
 namespace CamInv\EInvoice\Enums;
 
+/**
+ * Tax category codes for invoice line items.
+ *
+ * @see https://developer.e-invoice.gov.kh/data-type/tax-category
+ */
 enum TaxCategory: string
 {
     case VAT = 'VAT';

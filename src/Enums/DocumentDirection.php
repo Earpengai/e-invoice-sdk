@@ -2,6 +2,9 @@
 
 namespace CamInv\EInvoice\Enums;
 
+/**
+ * Indicates whether a document was sent or received.
+ */
 enum DocumentDirection: string
 {
     case SENT = 'SENT';

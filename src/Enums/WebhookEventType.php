@@ -2,6 +2,11 @@
 
 namespace CamInv\EInvoice\Enums;
 
+/**
+ * Webhook event type values received from the CamInvoice system.
+ *
+ * @see https://developer.e-invoice.gov.kh/data-type/event-type
+ */
 enum WebhookEventType: string
 {
     case DOCUMENT_DELIVERED = 'DOCUMENT.DELIVERED';
