@@ -48,6 +48,54 @@ class CamInvClientTest extends TestCase
         });
     }
 
+    public function test_put_sends_json_with_bearer_token(): void
+    {
+        Http::fake([
+            'api-sandbox.e-invoice.gov.kh/api/v1/document/*' => Http::response(['updated' => true], 200),
+        ]);
+
+        $response = $this->client->withBearerToken('test-token')->put('/api/v1/document/uuid-123', ['name' => 'updated']);
+
+        $this->assertSame(['updated' => true], $response);
+
+        Http::assertSent(function ($request) {
+            return $request->method() === 'PUT'
+                && $request->header('Authorization')[0] === 'Bearer test-token';
+        });
+    }
+
+    public function test_patch_sends_json_with_bearer_token(): void
+    {
+        Http::fake([
+            'api-sandbox.e-invoice.gov.kh/api/v1/document/*' => Http::response(['patched' => true], 200),
+        ]);
+
+        $response = $this->client->withBearerToken('test-token')->patch('/api/v1/document/uuid-123', ['field' => 'value']);
+
+        $this->assertSame(['patched' => true], $response);
+
+        Http::assertSent(function ($request) {
+            return $request->method() === 'PATCH'
+                && $request->header('Authorization')[0] === 'Bearer test-token';
+        });
+    }
+
+    public function test_delete_sends_json_with_bearer_token(): void
+    {
+        Http::fake([
+            'api-sandbox.e-invoice.gov.kh/api/v1/document/*' => Http::response(['deleted' => true], 200),
+        ]);
+
+        $response = $this->client->withBearerToken('test-token')->delete('/api/v1/document/uuid-123');
+
+        $this->assertSame(['deleted' => true], $response);
+
+        Http::assertSent(function ($request) {
+            return $request->method() === 'DELETE'
+                && $request->header('Authorization')[0] === 'Bearer test-token';
+        });
+    }
+
     public function test_get_with_query_params(): void
     {
         Http::fake([

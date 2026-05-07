@@ -47,14 +47,29 @@ class CamInvClient
         return $this;
     }
 
+    public function get(string $endpoint, array $query = []): array
+    {
+        return $this->send('get', $endpoint, ['query' => $query]);
+    }
+
     public function post(string $endpoint, array $data = []): array
     {
         return $this->send('post', $endpoint, ['json' => $data]);
     }
 
-    public function get(string $endpoint, array $query = []): array
+    public function put(string $endpoint, array $data = []): array
     {
-        return $this->send('get', $endpoint, ['query' => $query]);
+        return $this->send('put', $endpoint, ['json' => $data]);
+    }
+
+    public function patch(string $endpoint, array $data = []): array
+    {
+        return $this->send('patch', $endpoint, ['json' => $data]);
+    }
+
+    public function delete(string $endpoint, array $data = []): array
+    {
+        return $this->send('delete', $endpoint, ['json' => $data]);
     }
 
     public function getRaw(string $endpoint, array $query = []): string
@@ -74,17 +89,28 @@ class CamInvClient
         $url = "{$this->baseUrl}{$endpoint}";
 
         try {
-            $response = $request->$method($url, $options['json'] ?? $options['query'] ?? []);
+            if (isset($options['json'])) {
+                $response = $request->asJson()->$method($url, $options['json']);
+            } else {
+                $response = $request->$method($url, $options['query'] ?? []);
+            }
+
             $this->handleResponse($response);
 
             return $response->json() ?: [];
         } catch (RequestException $e) {
             $response = $e->response;
 
+            try {
+                $responseBody = $response ? $response->json() : null;
+            } catch (\Throwable) {
+                $responseBody = null;
+            }
+
             throw new CamInvException(
                 message: $this->extractErrorMessage($response),
                 statusCode: $response ? $response->status() : 0,
-                responseBody: $response ? $response->json() : null,
+                responseBody: $responseBody,
             );
         }
     }
@@ -111,10 +137,16 @@ class CamInvClient
             return;
         }
 
+        try {
+            $responseBody = $response->json();
+        } catch (\Throwable) {
+            $responseBody = null;
+        }
+
         throw new CamInvException(
             message: $this->extractErrorMessage($response),
             statusCode: $response->status(),
-            responseBody: $response->json(),
+            responseBody: $responseBody,
         );
     }
 
@@ -124,16 +156,36 @@ class CamInvClient
             return 'Network error: unable to connect to CamInv API.';
         }
 
-        $body = $response->json();
+        try {
+            $body = $response->json();
 
-        if (isset($body['message'])) {
-            return $body['message'];
+            if (! is_array($body)) {
+                $bodyString = (string) $response->body();
+
+                return $bodyString !== ''
+                    ? "CamInv API error: {$bodyString}"
+                    : "CamInv API error (HTTP {$response->status()})";
+            }
+
+            if (isset($body['error_description'])) {
+                return $body['error_description'];
+            }
+
+            if (isset($body['message'])) {
+                return is_array($body['message'])
+                    ? json_encode($body['message'])
+                    : $body['message'];
+            }
+
+            if (isset($body['error'])) {
+                return is_array($body['error'])
+                    ? json_encode($body['error'])
+                    : $body['error'];
+            }
+
+            return "CamInv API error (HTTP {$response->status()})";
+        } catch (\Throwable) {
+            return "CamInv API error (HTTP {$response->status()})";
         }
-
-        if (isset($body['error'])) {
-            return $body['error'];
-        }
-
-        return "CamInv API error (HTTP {$response->status()})";
     }
 }
