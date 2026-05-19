@@ -57,12 +57,12 @@ class InvoiceLine
     {
         $item = $doc->createElement('cac:Item');
 
-        if (! empty($data['name'])) {
-            $item->appendChild($doc->createElement('cbc:Name', $data['name']));
-        }
-
         if (! empty($data['description'])) {
             $item->appendChild($doc->createElement('cbc:Description', $data['description']));
+        }
+
+        if (! empty($data['name'])) {
+            $item->appendChild($doc->createElement('cbc:Name', $data['name']));
         }
 
         if (! empty($data['sellers_item_id'])) {

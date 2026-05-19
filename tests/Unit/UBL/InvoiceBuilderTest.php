@@ -58,6 +58,7 @@ class InvoiceBuilderTest extends TestCase
 
         $this->assertStringContainsString('<Invoice', $xml);
         $this->assertStringContainsString('xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"', $xml);
+        $this->assertStringContainsString('<cbc:UBLVersionID>2.1</cbc:UBLVersionID>', $xml);
         $this->assertStringContainsString('<cbc:ID>INV-001</cbc:ID>', $xml);
         $this->assertStringContainsString('<cbc:IssueDate>2026-05-06</cbc:IssueDate>', $xml);
         $this->assertStringContainsString('<cbc:DocumentCurrencyCode>KHR</cbc:DocumentCurrencyCode>', $xml);

@@ -30,6 +30,8 @@ abstract class BaseBuilder
 
     protected ?string $note = null;
 
+    protected ?string $ublVersion = null;
+
     protected ?string $invoiceTypeCode = null;
 
     protected ?array $supplier = null;
@@ -51,6 +53,7 @@ abstract class BaseBuilder
         $this->doc = new DOMDocument('1.0', 'UTF-8');
         $this->doc->formatOutput = true;
         $this->currency = $options['currency'] ?? config('e-invoice.ubl.default_currency', 'KHR');
+        $this->ublVersion = $options['ubl_version'] ?? config('e-invoice.ubl.version', '2.1');
     }
 
     abstract protected function getRootElement(): string;
@@ -83,6 +86,13 @@ abstract class BaseBuilder
     public function setNote(?string $note): static
     {
         $this->note = $note;
+
+        return $this;
+    }
+
+    public function setUblVersion(string $version): static
+    {
+        $this->ublVersion = $version;
 
         return $this;
     }
@@ -197,6 +207,10 @@ abstract class BaseBuilder
     protected function buildHeader(\DOMElement $root): void
     {
         $cbc = 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2';
+
+        if (isset($this->ublVersion)) {
+            $root->appendChild($this->doc->createElementNS($cbc, 'cbc:UBLVersionID', $this->ublVersion));
+        }
 
         if (isset($this->id)) {
             $root->appendChild($this->doc->createElementNS($cbc, 'cbc:ID', $this->id));

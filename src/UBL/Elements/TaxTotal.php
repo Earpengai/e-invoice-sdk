@@ -18,12 +18,15 @@ class TaxTotal
 
         foreach ($taxSubtotals as $subtotal) {
             $totalTaxAmount += (float) ($subtotal['tax_amount'] ?? 0);
-            $total->appendChild(self::buildTaxSubtotal($doc, $subtotal));
         }
 
         $taxAmountEl = $doc->createElement('cbc:TaxAmount', number_format($totalTaxAmount, 2, '.', ''));
-        $taxAmountEl->setAttribute('currencyID', $subtotal['currency'] ?? 'KHR');
+        $taxAmountEl->setAttribute('currencyID', ($taxSubtotals[0]['currency'] ?? $taxSubtotals[array_key_first($taxSubtotals)]['currency'] ?? 'KHR'));
         $total->appendChild($taxAmountEl);
+
+        foreach ($taxSubtotals as $subtotal) {
+            $total->appendChild(self::buildTaxSubtotal($doc, $subtotal));
+        }
 
         $parent->appendChild($total);
     }
@@ -41,14 +44,14 @@ class TaxTotal
         }
 
         $category = $doc->createElement('cac:TaxCategory');
-        $category->appendChild($doc->createElement('cbc:ID', $data['tax_category_id'] ?? 'VAT'));
+        $category->appendChild($doc->createElement('cbc:ID', $data['tax_category_id'] ?? 'S'));
 
         if (isset($data['percent'])) {
             $category->appendChild($doc->createElement('cbc:Percent', number_format($data['percent'], 2, '.', '')));
         }
 
         $scheme = $doc->createElement('cac:TaxScheme');
-        $scheme->appendChild($doc->createElement('cbc:ID', $data['tax_scheme_id'] ?? 'S'));
+        $scheme->appendChild($doc->createElement('cbc:ID', $data['tax_scheme_id'] ?? 'VAT'));
         $category->appendChild($scheme);
 
         $subtotal->appendChild($category);
