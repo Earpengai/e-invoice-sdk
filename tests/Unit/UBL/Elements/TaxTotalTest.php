@@ -27,9 +27,9 @@ class TaxTotalTest extends TestCase
         $xml = $doc->saveXML();
 
         $this->assertStringContainsString('<cac:TaxTotal>', $xml);
-        $this->assertStringContainsString('<cbc:TaxAmount>10.00</cbc:TaxAmount>', $xml);
+        $this->assertStringContainsString('<cbc:TaxAmount currencyID="KHR">10.00</cbc:TaxAmount>', $xml);
         $this->assertStringContainsString('<cac:TaxSubtotal>', $xml);
-        $this->assertStringContainsString('<cbc:TaxableAmount>100.00</cbc:TaxableAmount>', $xml);
+        $this->assertStringContainsString('<cbc:TaxableAmount currencyID="KHR">100.00</cbc:TaxableAmount>', $xml);
         $this->assertStringContainsString('<cbc:ID>VAT</cbc:ID>', $xml);
         $this->assertStringContainsString('<cbc:Percent>10.00</cbc:Percent>', $xml);
         $this->assertStringContainsString('<cac:TaxScheme>', $xml);
@@ -62,7 +62,7 @@ class TaxTotalTest extends TestCase
         $subtotalCount = substr_count($xml, '<cac:TaxSubtotal>');
         $this->assertSame(2, $subtotalCount);
 
-        $this->assertStringContainsString('<cbc:TaxAmount>10.00</cbc:TaxAmount>', $xml);
+        $this->assertStringContainsString('<cbc:TaxAmount currencyID="KHR">10.00</cbc:TaxAmount>', $xml);
     }
 
     public function test_default_values(): void

@@ -25,22 +25,27 @@ class TaxTotal
         $total->appendChild($taxAmountEl);
 
         foreach ($taxSubtotals as $subtotal) {
-            $total->appendChild(self::buildTaxSubtotal($doc, $subtotal));
+            $currency = $subtotal['currency'] ?? 'KHR';
+            $total->appendChild(self::buildTaxSubtotal($doc, $subtotal, $currency));
         }
 
         $parent->appendChild($total);
     }
 
-    protected static function buildTaxSubtotal(DOMDocument $doc, array $data): DOMElement
+    protected static function buildTaxSubtotal(DOMDocument $doc, array $data, string $currency = 'KHR'): DOMElement
     {
         $subtotal = $doc->createElement('cac:TaxSubtotal');
 
         if (isset($data['taxable_amount'])) {
-            $subtotal->appendChild($doc->createElement('cbc:TaxableAmount', number_format($data['taxable_amount'], 2, '.', '')));
+            $amt = $doc->createElement('cbc:TaxableAmount', number_format($data['taxable_amount'], 2, '.', ''));
+            $amt->setAttribute('currencyID', $currency);
+            $subtotal->appendChild($amt);
         }
 
         if (isset($data['tax_amount'])) {
-            $subtotal->appendChild($doc->createElement('cbc:TaxAmount', number_format($data['tax_amount'], 2, '.', '')));
+            $amt = $doc->createElement('cbc:TaxAmount', number_format($data['tax_amount'], 2, '.', ''));
+            $amt->setAttribute('currencyID', $currency);
+            $subtotal->appendChild($amt);
         }
 
         $category = $doc->createElement('cac:TaxCategory');
