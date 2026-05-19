@@ -18,13 +18,17 @@ class DebitNoteLine
 
         if (isset($data['invoiced_quantity'])) {
             $qty = $doc->createElement('cbc:InvoicedQuantity', number_format((float) $data['invoiced_quantity'], 4, '.', ''));
-            $qty->setAttribute('unitCode', $data['unit_code'] ?? 'EA');
+            if (! empty($data['unit_code'])) {
+                $qty->setAttribute('unitCode', $data['unit_code']);
+            }
             $line->appendChild($qty);
         }
 
         if (isset($data['debited_quantity'])) {
             $qty = $doc->createElement('cbc:DebitedQuantity', number_format((float) $data['debited_quantity'], 4, '.', ''));
-            $qty->setAttribute('unitCode', $data['unit_code'] ?? 'EA');
+            if (! empty($data['unit_code'])) {
+                $qty->setAttribute('unitCode', $data['unit_code']);
+            }
             $line->appendChild($qty);
         }
 

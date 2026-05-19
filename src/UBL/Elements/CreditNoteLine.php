@@ -18,7 +18,9 @@ class CreditNoteLine
 
         if (isset($data['invoiced_quantity'])) {
             $qty = $doc->createElement('cbc:InvoicedQuantity', number_format((float) $data['invoiced_quantity'], 4, '.', ''));
-            $qty->setAttribute('unitCode', $data['unit_code'] ?? 'EA');
+            if (! empty($data['unit_code'])) {
+                $qty->setAttribute('unitCode', $data['unit_code']);
+            }
             $line->appendChild($qty);
         }
 
@@ -47,7 +49,9 @@ class CreditNoteLine
 
         if (isset($data['credited_quantity'])) {
             $qty = $doc->createElement('cbc:CreditedQuantity', number_format((float) $data['credited_quantity'], 4, '.', ''));
-            $qty->setAttribute('unitCode', $data['unit_code'] ?? 'EA');
+            if (! empty($data['unit_code'])) {
+                $qty->setAttribute('unitCode', $data['unit_code']);
+            }
             $line->appendChild($qty);
         }
 

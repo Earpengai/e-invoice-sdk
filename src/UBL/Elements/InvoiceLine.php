@@ -21,7 +21,9 @@ class InvoiceLine
 
         if (isset($data['quantity'])) {
             $qty = $doc->createElement('cbc:InvoicedQuantity', number_format((float) $data['quantity'], 4, '.', ''));
-            $qty->setAttribute('unitCode', $data['unit_code'] ?? 'EA');
+            if (! empty($data['unit_code'])) {
+                $qty->setAttribute('unitCode', $data['unit_code']);
+            }
             $line->appendChild($qty);
         }
 
