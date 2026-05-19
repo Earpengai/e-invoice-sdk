@@ -2,6 +2,7 @@
 
 namespace CamInv\EInvoice\UBL\Elements;
 
+use CamInv\EInvoice\UBL\XmlSanitizer;
 use DOMDocument;
 use DOMElement;
 
@@ -29,7 +30,8 @@ class Party
 
         if (! empty($data['party_name'])) {
             $partyName = $doc->createElement('cac:PartyName');
-            $name = $doc->createElement('cbc:Name', $data['party_name']);
+            $name = $doc->createElement('cbc:Name');
+            $name->appendChild($doc->createTextNode(XmlSanitizer::sanitize($data['party_name'])));
             $partyName->appendChild($name);
             $wrapper->appendChild($partyName);
         }
@@ -60,27 +62,27 @@ class Party
         $address = $doc->createElement('cac:PostalAddress');
 
         if (! empty($data['floor'])) {
-            $address->appendChild($doc->createElement('cbc:Floor', $data['floor']));
+            XmlSanitizer::appendTextElement($doc, $address, 'cbc:Floor', $data['floor']);
         }
 
         if (! empty($data['room'])) {
-            $address->appendChild($doc->createElement('cbc:Room', $data['room']));
+            XmlSanitizer::appendTextElement($doc, $address, 'cbc:Room', $data['room']);
         }
 
         if (! empty($data['street_name'])) {
-            $address->appendChild($doc->createElement('cbc:StreetName', $data['street_name']));
+            XmlSanitizer::appendTextElement($doc, $address, 'cbc:StreetName', $data['street_name']);
         }
 
         if (! empty($data['additional_street_name'])) {
-            $address->appendChild($doc->createElement('cbc:AdditionalStreetName', $data['additional_street_name']));
+            XmlSanitizer::appendTextElement($doc, $address, 'cbc:AdditionalStreetName', $data['additional_street_name']);
         }
 
         if (! empty($data['building_name'])) {
-            $address->appendChild($doc->createElement('cbc:BuildingName', $data['building_name']));
+            XmlSanitizer::appendTextElement($doc, $address, 'cbc:BuildingName', $data['building_name']);
         }
 
         if (! empty($data['city_name'])) {
-            $address->appendChild($doc->createElement('cbc:CityName', $data['city_name']));
+            XmlSanitizer::appendTextElement($doc, $address, 'cbc:CityName', $data['city_name']);
         }
 
         if (! empty($data['postal_zone'])) {
@@ -88,14 +90,14 @@ class Party
         }
 
         if (! empty($data['country_subentity'])) {
-            $address->appendChild($doc->createElement('cbc:CountrySubentity', $data['country_subentity']));
+            XmlSanitizer::appendTextElement($doc, $address, 'cbc:CountrySubentity', $data['country_subentity']);
         }
 
         if (! empty($data['country'])) {
             $country = $doc->createElement('cac:Country');
             $country->appendChild($doc->createElement('cbc:IdentificationCode', $data['country']['identification_code'] ?? $data['country']));
             if (! empty($data['country']['name'])) {
-                $country->appendChild($doc->createElement('cbc:Name', $data['country']['name']));
+                XmlSanitizer::appendTextElement($doc, $country, 'cbc:Name', $data['country']['name']);
             }
             $address->appendChild($country);
         }
@@ -123,7 +125,7 @@ class Party
         $entity = $doc->createElement('cac:PartyLegalEntity');
 
         if (! empty($data['registration_name'])) {
-            $entity->appendChild($doc->createElement('cbc:RegistrationName', $data['registration_name']));
+            XmlSanitizer::appendTextElement($doc, $entity, 'cbc:RegistrationName', $data['registration_name']);
         }
 
         if (! empty($data['company_id'])) {
@@ -138,15 +140,15 @@ class Party
         $contact = $doc->createElement('cac:Contact');
 
         if (! empty($data['name'])) {
-            $contact->appendChild($doc->createElement('cbc:Name', $data['name']));
+            XmlSanitizer::appendTextElement($doc, $contact, 'cbc:Name', $data['name']);
         }
 
         if (! empty($data['telephone'])) {
-            $contact->appendChild($doc->createElement('cbc:Telephone', $data['telephone']));
+            XmlSanitizer::appendTextElement($doc, $contact, 'cbc:Telephone', $data['telephone']);
         }
 
         if (! empty($data['email'])) {
-            $contact->appendChild($doc->createElement('cbc:ElectronicMail', $data['email']));
+            XmlSanitizer::appendTextElement($doc, $contact, 'cbc:ElectronicMail', $data['email']);
         }
 
         return $contact;

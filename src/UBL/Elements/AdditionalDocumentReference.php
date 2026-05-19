@@ -2,6 +2,7 @@
 
 namespace CamInv\EInvoice\UBL\Elements;
 
+use CamInv\EInvoice\UBL\XmlSanitizer;
 use DOMDocument;
 use DOMElement;
 
@@ -20,7 +21,7 @@ class AdditionalDocumentReference
             }
 
             if (! empty($data['document_description'])) {
-                $ref->appendChild($doc->createElement('cbc:DocumentDescription', $data['document_description']));
+                XmlSanitizer::appendTextElement($doc, $ref, 'cbc:DocumentDescription', $data['document_description']);
             }
 
             if (! empty($data['attachment'])) {

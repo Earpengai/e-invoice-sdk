@@ -2,6 +2,7 @@
 
 namespace CamInv\EInvoice\UBL\Elements;
 
+use CamInv\EInvoice\UBL\XmlSanitizer;
 use DOMDocument;
 use DOMElement;
 
@@ -19,7 +20,7 @@ class PaymentTerms
         $terms = $doc->createElement('cac:PaymentTerms');
 
         if (! empty($data['note'])) {
-            $terms->appendChild($doc->createElement('cbc:Note', $data['note']));
+            XmlSanitizer::appendTextElement($doc, $terms, 'cbc:Note', $data['note']);
         }
 
         if (! empty($data['settlement_discount_percent'])) {

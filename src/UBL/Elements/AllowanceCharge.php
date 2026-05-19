@@ -2,6 +2,7 @@
 
 namespace CamInv\EInvoice\UBL\Elements;
 
+use CamInv\EInvoice\UBL\XmlSanitizer;
 use DOMDocument;
 use DOMElement;
 
@@ -23,7 +24,7 @@ class AllowanceCharge
                     ? $data['allowance_charge_reason']
                     : [$data['allowance_charge_reason']];
                 foreach ($reasons as $reason) {
-                    $ac->appendChild($doc->createElement('cbc:AllowanceChargeReason', $reason));
+                    XmlSanitizer::appendTextElement($doc, $ac, 'cbc:AllowanceChargeReason', $reason);
                 }
             }
 
