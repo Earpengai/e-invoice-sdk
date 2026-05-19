@@ -68,7 +68,9 @@ class XmlSanitizer
             return '';
         }
 
-        return preg_replace($pattern, '', (string) $value);
+        $result = preg_replace($pattern, '', (string) $value);
+
+        return $result ?? '';
     }
 
     // ──────────────────────── SMART AMPERSAND ESCAPING ────────────────────

@@ -31,10 +31,12 @@ trait XmlSanitizer
         // XML 1.0 legal characters:
         // #x9 (tab) | #xA (LF) | #xD (CR) | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
         // Removes: control characters, surrogates, and other invalid code points
-        return preg_replace(
+        $result = preg_replace(
             '/[^\x09\x0A\x0D\x20-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]/u',
             '',
             (string) $value
         );
+
+        return $result ?? '';
     }
 }

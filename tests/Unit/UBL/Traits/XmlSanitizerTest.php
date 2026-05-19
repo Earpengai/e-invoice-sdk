@@ -78,7 +78,7 @@ class XmlSanitizerTest extends TestCase
         $input = "Valid\xED\xA0\x80Invalid";
         $result = $this->sanitizeXml($input);
         // The surrogate should be removed
-        $this->assertNotContains("\xED\xA0\x80", $result);
+        $this->assertStringNotContainsString("\xED\xA0\x80", $result);
     }
 
     /**
