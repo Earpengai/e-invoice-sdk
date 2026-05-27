@@ -1,0 +1,6 @@
+{
+    "type": "DOCUMENT.ACCEPTED",
+    "document_id": "uuid-test-accepted-789-012345",
+    "endpoint_id": "KHUID00001234",
+    "status": "ACCEPTED"
+}

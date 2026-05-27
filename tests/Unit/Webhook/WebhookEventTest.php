@@ -46,6 +46,26 @@ class WebhookEventTest extends TestCase
         $this->assertFalse($event->isDocumentDelivered());
     }
 
+    public function test_parse_document_accepted(): void
+    {
+        $payload = [
+            'type' => 'DOCUMENT.ACCEPTED',
+            'document_id' => 'uuid-accepted-789',
+            'endpoint_id' => 'KHUID00001234',
+            'status' => 'ACCEPTED',
+        ];
+
+        $event = WebhookEvent::fromPayload($payload);
+
+        $this->assertSame(WebhookEventType::DOCUMENT_ACCEPTED, $event->type);
+        $this->assertSame('uuid-accepted-789', $event->documentId);
+        $this->assertSame('ACCEPTED', $event->status);
+        $this->assertTrue($event->isDocumentAccepted());
+        $this->assertFalse($event->isDocumentDelivered());
+        $this->assertFalse($event->isDocumentReceived());
+        $this->assertFalse($event->isStatusUpdated());
+    }
+
     public function test_parse_status_updated(): void
     {
         $payload = [

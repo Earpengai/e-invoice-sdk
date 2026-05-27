@@ -8,7 +8,7 @@ use CamInv\EInvoice\Tests\TestCase;
 
 class WebhookProcessingTest extends TestCase
 {
-    public function test_all_four_event_types_from_fixtures(): void
+    public function test_all_five_event_types_from_fixtures(): void
     {
         $deliveredPayload = json_decode(
             file_get_contents(__DIR__ . '/../Fixtures/webhook/document-delivered.json'),
@@ -30,6 +30,16 @@ class WebhookProcessingTest extends TestCase
         $this->assertTrue($event->isDocumentReceived());
         $this->assertSame('uuid-test-456-def-abc-789012', $event->documentId);
         $this->assertSame('VALID', $event->status);
+
+        $acceptedPayload = json_decode(
+            file_get_contents(__DIR__ . '/../Fixtures/webhook/document-accepted.json'),
+            true
+        );
+        $event = new WebhookEvent($acceptedPayload);
+        $this->assertSame(WebhookEventType::DOCUMENT_ACCEPTED, $event->type);
+        $this->assertTrue($event->isDocumentAccepted());
+        $this->assertSame('uuid-test-accepted-789-012345', $event->documentId);
+        $this->assertSame('ACCEPTED', $event->status);
 
         $statusPayload = json_decode(
             file_get_contents(__DIR__ . '/../Fixtures/webhook/status-updated.json'),

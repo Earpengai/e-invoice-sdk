@@ -15,6 +15,9 @@ class WebhookEventTypeTest extends TestCase
         $this->assertSame('DOCUMENT.RECEIVED', WebhookEventType::DOCUMENT_RECEIVED->value);
         $this->assertSame('Document Received', WebhookEventType::DOCUMENT_RECEIVED->label());
 
+        $this->assertSame('DOCUMENT.ACCEPTED', WebhookEventType::DOCUMENT_ACCEPTED->value);
+        $this->assertSame('Document Accepted', WebhookEventType::DOCUMENT_ACCEPTED->label());
+
         $this->assertSame('DOCUMENT.STATUS_UPDATED', WebhookEventType::DOCUMENT_STATUS_UPDATED->value);
         $this->assertSame('Status Updated', WebhookEventType::DOCUMENT_STATUS_UPDATED->label());
 

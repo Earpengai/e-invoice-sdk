@@ -14,7 +14,7 @@ use CamInv\EInvoice\Enums\WebhookEventType;
  */
 class WebhookEvent
 {
-    /** The event type (DOCUMENT.DELIVERED, DOCUMENT.RECEIVED, DOCUMENT.STATUS_UPDATED, ENTITY.REVOKED). */
+    /** The event type (DOCUMENT.DELIVERED, DOCUMENT.RECEIVED, DOCUMENT.ACCEPTED, DOCUMENT.STATUS_UPDATED, ENTITY.REVOKED). */
     public readonly WebhookEventType $type;
 
     /** The document ID. Null for ENTITY.REVOKED events. */
@@ -63,6 +63,14 @@ class WebhookEvent
     public function isDocumentReceived(): bool
     {
         return $this->type === WebhookEventType::DOCUMENT_RECEIVED;
+    }
+
+    /**
+     * Check if this event indicates a document was accepted by the customer.
+     */
+    public function isDocumentAccepted(): bool
+    {
+        return $this->type === WebhookEventType::DOCUMENT_ACCEPTED;
     }
 
     /**
