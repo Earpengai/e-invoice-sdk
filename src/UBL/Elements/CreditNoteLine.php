@@ -24,6 +24,14 @@ class CreditNoteLine
             $line->appendChild($qty);
         }
 
+        if (isset($data['credited_quantity'])) {
+            $qty = $doc->createElement('cbc:CreditedQuantity', number_format((float) $data['credited_quantity'], 4, '.', ''));
+            if (! empty($data['unit_code'])) {
+                $qty->setAttribute('unitCode', $data['unit_code']);
+            }
+            $line->appendChild($qty);
+        }
+
         if (isset($data['line_extension_amount'])) {
             $amt = $doc->createElement('cbc:LineExtensionAmount', number_format((float) $data['line_extension_amount'], 2, '.', ''));
             $amt->setAttribute('currencyID', $data['currency'] ?? 'KHR');
@@ -45,14 +53,6 @@ class CreditNoteLine
 
         if (! empty($data['price'])) {
             InvoiceLine::buildPrice($doc, $line, $data['price'], $data['currency'] ?? 'KHR');
-        }
-
-        if (isset($data['credited_quantity'])) {
-            $qty = $doc->createElement('cbc:CreditedQuantity', number_format((float) $data['credited_quantity'], 4, '.', ''));
-            if (! empty($data['unit_code'])) {
-                $qty->setAttribute('unitCode', $data['unit_code']);
-            }
-            $line->appendChild($qty);
         }
 
         $parent->appendChild($line);
