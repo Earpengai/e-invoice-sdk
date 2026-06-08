@@ -12,6 +12,7 @@ use CamInv\EInvoice\UBL\Elements;
 class CreditNoteBuilder extends BaseBuilder
 {
     protected ?string $originalInvoiceId = null;
+    protected ?string $originalInvoiceUUID = null;
 
     protected function getRootElement(): string
     {
@@ -35,12 +36,19 @@ class CreditNoteBuilder extends BaseBuilder
         return $this;
     }
 
+    public function setOriginalInvoiceUUID(string $uuid): static
+    {
+        $this->originalInvoiceUUID = $uuid;
+
+        return $this;
+    }
+
     protected function buildHeader(\DOMElement $root): void
     {
         parent::buildHeader($root);
 
-        if ($this->originalInvoiceId) {
-            Elements\BillingReference::build($this->doc, $root, $this->originalInvoiceId);
+        if ($this->originalInvoiceUUID && ! $this->originalInvoiceId) {
+            Elements\BillingReference::build($this->doc, $root, $this->originalInvoiceId, $this->originalInvoiceUUID);
         }
     }
 
@@ -56,6 +64,13 @@ class CreditNoteBuilder extends BaseBuilder
         if (empty($this->originalInvoiceId)) {
             throw new \CamInv\EInvoice\Exceptions\ValidationException(
                 'Missing required field for Credit Note: originalInvoiceId',
+                422,
+            );
+        }
+
+        if (isset($this->originalInvoiceUUID) && empty($this->originalInvoiceId)) {
+            throw new \CamInv\EInvoice\Exceptions\ValidationException(
+                'originalInvoiceUUID cannot be set without originalInvoiceId',
                 422,
             );
         }
