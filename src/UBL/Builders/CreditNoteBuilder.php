@@ -13,6 +13,8 @@ class CreditNoteBuilder extends BaseBuilder
 {
     protected ?string $originalInvoiceId = null;
     protected ?string $originalInvoiceUUID = null;
+    protected ?string $documentTypeCode = '388';
+    protected ?string $documentType = 'TAX_INVOICE';
 
     protected function getRootElement(): string
     {
@@ -43,12 +45,26 @@ class CreditNoteBuilder extends BaseBuilder
         return $this;
     }
 
+    public function setDocumentTypeCode(string $code): static
+    {
+        $this->documentTypeCode = $code;
+
+        return $this;
+    }
+
+    public function setDocumentType(string $type): static
+    {
+        $this->documentType = $type;
+
+        return $this;
+    }
+
     protected function buildHeader(\DOMElement $root): void
     {
         parent::buildHeader($root);
 
-        if ($this->originalInvoiceUUID && $this->originalInvoiceId) {
-            Elements\BillingReference::build($this->doc, $root, $this->originalInvoiceId, $this->originalInvoiceUUID);
+        if ($this->originalInvoiceId) {
+            Elements\BillingReference::build($this->doc, $root, $this->originalInvoiceId, $this->originalInvoiceUUID, $this->documentTypeCode, $this->documentType);
         }
     }
 
